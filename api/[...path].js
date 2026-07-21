@@ -15,7 +15,11 @@ const seedCars = [
 ]
 
 const send = (response, status, data) => response.status(status).json(data)
-const pathname = (request) => new URL(request.url, 'https://drivehub-kr.com').pathname
+const pathname = (request) => {
+  const route = request.query?.route
+  if (route) return `/api/${Array.isArray(route) ? route.join('/') : route}`
+  return new URL(request.url, 'https://drivehub-kr.com').pathname
+}
 const safeEqual = (left, right) => {
   const a = Buffer.from(String(left)); const b = Buffer.from(String(right))
   return a.length === b.length && timingSafeEqual(a, b)
