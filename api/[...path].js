@@ -24,7 +24,6 @@ const safeEqual = (left, right) => {
 const blobToken = () => process.env.BLOB_READ_WRITE_TOKEN
 const loadData = async (name, fallback) => {
   const token = blobToken()
-  if (!token) throw new Error('BLOB_READ_WRITE_TOKEN не настроен')
   const result = await list({ prefix: `${dataPrefix}/${name}.json`, limit: 1, token })
   if (!result.blobs.length) return structuredClone(fallback)
   const blob = await get(result.blobs[0].pathname, { access: 'private', useCache: false, token })
