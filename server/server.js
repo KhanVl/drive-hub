@@ -47,6 +47,12 @@ const readBody = (request) => new Promise((resolve, reject) => {
     try { resolve(JSON.parse(body || '{}')) } catch (error) { reject(error) }
   })
 })
+const calculateCustoms = async (input) => {
+  const fields = new URLSearchParams({ owner: String(input.owner || 1), age: String(input.age || '3-5'), engine: String(input.engine || 1), power: String(Number(input.power) || 1), power_unit: String(input.power_unit || 1), value: String(Number(input.value) || 1), price: String(Number(input.price) || 0), curr: String(input.curr || 'KRW') })
+  const result = await fetch('https://calcus.ru/calculate/Customs', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'DriveHub-KR/1.0' }, body: fields })
+  if (!result.ok) throw new Error('Сервис таможенного расчёта временно недоступен')
+  return result.json()
+}
 
 createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host}`)
@@ -58,6 +64,7 @@ createServer(async (request, response) => {
 
   try {
     if (request.method === 'GET' && url.pathname === '/api/health') return send(response, 200, { status: 'ok', time: new Date().toISOString() })
+    if (request.method === 'POST' && url.pathname === '/api/customs') return send(response, 200, await calculateCustoms(await readBody(request)))
 
     if (request.method === 'POST' && url.pathname === '/api/admin/login') {
       const ip = request.socket.remoteAddress || 'unknown'
@@ -144,7 +151,7 @@ createServer(async (request, response) => {
       if (!input.brand?.trim() || !input.name?.trim() || !Number(input.year) || !Number(input.price)) return send(response, 400, { error: 'Заполните марку, модель, год и цену' })
       const cars = await readJson('cars.json')
       const now = new Date().toISOString()
-      const car = { id: Math.max(0, ...cars.map((item) => item.id)) + 1, brand: input.brand.trim(), name: input.name.trim(), year: Number(input.year), mileage: Number(input.mileage) || 0, fuel: input.fuel || 'Бензин', drive: input.drive || 'Передний привод', price: Number(input.price), tone: input.tone || 'graphite', photos: Array.isArray(input.photos) ? input.photos.filter(Boolean) : [], status: 'available', createdAt: now, updatedAt: now }
+      const car = { id: Math.max(0, ...cars.map((item) => item.id)) + 1, brand: input.brand.trim(), name: input.name.trim(), year: Number(input.year), mileage: Number(input.mileage) || 0, fuel: input.fuel || 'Бензин', drive: input.drive || 'Передний привод', price: Number(input.price), tone: input.tone || 'graphite', photos: Array.isArray(input.photos) ? input.photos.filter(Boolean) : [], equipment: Array.isArray(input.equipment) ? input.equipment : [], conditionMarks: Array.isArray(input.conditionMarks) ? input.conditionMarks : [], status: 'available', createdAt: now, updatedAt: now }
       cars.push(car)
       await writeJson('cars.json', cars)
       return send(response, 201, car)
@@ -157,7 +164,7 @@ createServer(async (request, response) => {
       const cars = await readJson('cars.json')
       const car = cars.find((item) => item.id === Number(adminCarMatch[1]))
       if (!car) return send(response, 404, { error: 'Автомобиль не найден' })
-      const allowed = ['brand', 'name', 'year', 'mileage', 'fuel', 'drive', 'price', 'tone', 'photos', 'status']
+      const allowed = ['brand', 'name', 'year', 'mileage', 'fuel', 'drive', 'price', 'tone', 'photos', 'equipment', 'conditionMarks', 'status']
       allowed.forEach((key) => { if (input[key] !== undefined) car[key] = input[key] })
       car.year = Number(car.year); car.mileage = Number(car.mileage); car.price = Number(car.price)
       if (!['available', 'sold'].includes(car.status)) return send(response, 400, { error: 'Некорректный статус' })

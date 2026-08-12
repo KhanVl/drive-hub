@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import heroImage from './assets/hero-cars.jpg'
 import AdminPanel from './AdminPanel'
 import { defaultEquipment, equipmentOptions } from './equipmentOptions'
+import ConditionMap from './ConditionMap'
+import { damageTypes } from './damageTypes'
+import CustomsCalculator from './CustomsCalculator'
 import './App.css'
 
 const fallbackCars = [
@@ -24,7 +27,7 @@ const steps = [
 ]
 
 function Mark() {
-  return <a className="brand" href="#top" aria-label="DH Export"><span>DH</span><small>EXPORT</small></a>
+  return <a className="brand" href="/" aria-label="DH Export — на главную"><span>DH</span><small>EXPORT</small></a>
 }
 
 function App() {
@@ -141,7 +144,9 @@ function App() {
             <article id="detail-request" className="detail-card request-card"><h2>Заказать экспорт</h2><p>Оставьте заявку — рассчитаем доставку в вашу страну.</p>{requestSent ? <div className="success-message"><b>✓ Заявка отправлена</b><span>Мы свяжемся с вами в ближайшее время.</span></div> : <form onSubmit={submitInquiry}><input name="name" required placeholder="Ваше имя" /><input name="phone" required type="tel" placeholder="Телефон / WhatsApp" /><select name="country" required defaultValue=""><option value="" disabled>Страна назначения</option><option>Россия</option><option>Казахстан</option><option>Германия</option><option>Другая страна</option></select><textarea name="message" placeholder="Комментарий (необязательно)" />{requestError && <span className="request-error">{requestError}</span>}<button className="button button-gold" type="submit">Отправить заявку</button></form>}</article>
           </section>
 
-          <section className="export-row"><article className="export-process"><h2>Как проходит экспорт</h2><div>{steps.slice(0,4).map(([number,title]) => <span key={number}><b>{number}</b><small>{title}</small></span>)}</div></article><article className="export-total"><p>Примерная стоимость с доставкой</p><span>Казахстан</span><strong>₩ {formatNumber(exportPrice)}</strong><small>Предварительный расчёт, включая основные расходы</small><a href="#detail-request">Рассчитать для другой страны →</a></article></section>
+          <section className="vehicle-condition"><div className="condition-heading"><p className="eyebrow">Отчёт осмотра</p><h2>Состояние кузова</h2><p>{selectedCar.conditionMarks?.length ? 'На схеме отмечены обнаруженные особенности кузова.' : 'При осмотре кузова заметные повреждения не отмечены.'}</p></div><ConditionMap marks={selectedCar.conditionMarks || []}/><div className="damage-legend">{damageTypes.map((type) => <span key={type.id}><i style={{ background: type.color }}>{type.symbol}</i>{type.label}</span>)}</div></section>
+          <section className="export-row"><article className="export-process"><h2>Как проходит экспорт</h2><div>{steps.slice(0,4).map(([number,title]) => <span key={number}><b>{number}</b><small>{title}</small></span>)}</div></article><article className="export-total"><p>Примерная стоимость с доставкой</p><span>Казахстан</span><strong>₩ {formatNumber(exportPrice)}</strong><small>Предварительный расчёт, включая основные расходы</small><a href="#calculator">Открыть калькулятор растаможки →</a></article></section>
+          <CustomsCalculator car={selectedCar}/>
         </div>
         <footer className="detail-footer"><div className="copyright">© 2026 DH Export. Все права защищены.</div></footer>
       </main>
@@ -182,7 +187,7 @@ function App() {
       <section className="dark-section">
         <div className="container">
           <div className="stats">
-            <div><span>🚘</span><p><strong>1000+</strong><small>автомобилей экспортировано</small></p></div>
+            <div><span>🚘</span><p><strong>500+</strong><small>автомобилей экспортировано</small></p></div>
             <div><span>◎</span><p><strong>15+</strong><small>стран доставки</small></p></div>
             <div><span>♢</span><p><strong>5 лет</strong><small>опыта в сфере автоэкспорта</small></p></div>
             <div><span>♙</span><p><strong>100%</strong><small>прозрачность сделки</small></p></div>
@@ -225,7 +230,7 @@ function App() {
         <div><b>✓</b><span><strong>Безопасная сделка</strong><small>Работаем официально и по договору</small></span></div>
       </div></div></section>
 
-      <footer id="contacts"><div className="container footer-grid"><div><Mark /><p>Профессиональный экспорт автомобилей из Кореи. Надёжность, честность и индивидуальный подход.</p></div><div><h4>Навигация</h4><a href="#cars">Авто в наличии</a><a href="#process">Как мы работаем</a><a href="#about">О нас</a><button className="admin-link" onClick={() => setAdminOpen(true)}>Администратор</button></div><div><h4>Связаться с нами</h4><a href="tel:+821057377308">+ 82 10 5737 7308</a><a href="mailto:drivehub.kr@gmail.com">drivehub.kr@gmail.com</a><span>Инчхон, Южная Корея</span></div><div className="footer-cta"><h3>Подберём автомобиль под ваш бюджет</h3><a className="button button-gold" href="mailto:info@dhexport.kr">Оставить заявку</a></div></div><div className="copyright">© 2026 DH Export. Все права защищены.</div></footer>
+      <footer id="contacts"><div className="container footer-grid"><div><Mark /><p>Профессиональный экспорт автомобилей из Кореи. Надёжность, честность и индивидуальный подход.</p><div className="social-links"><a href="https://wa.me/821057377308" target="_blank" rel="noreferrer" aria-label="Написать в WhatsApp">WA</a><a href="tg://resolve?phone=821057377308" aria-label="Написать в Telegram">TG</a></div></div><div><h4>Навигация</h4><a href="#cars">Авто в наличии</a><a href="#process">Как мы работаем</a><a href="#about">О нас</a><button className="admin-link" onClick={() => setAdminOpen(true)}>Администратор</button></div><div><h4>Связаться с нами</h4><a href="tel:+821057377308">+ 82 10 5737 7308</a><a href="mailto:drivehub.kr@gmail.com">drivehub.kr@gmail.com</a><span>Инчхон, Южная Корея</span></div><div className="footer-cta"><h3>Подберём автомобиль под ваш бюджет</h3><a className="button button-gold" href="https://wa.me/821057377308" target="_blank" rel="noreferrer">Оставить заявку</a></div></div><div className="copyright">© 2026 DH Export. Все права защищены.</div></footer>
     </main>
   )
 }

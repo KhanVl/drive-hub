@@ -52,11 +52,22 @@ const verifySession = (request) => {
   try { return JSON.parse(Buffer.from(payload, 'base64url').toString()).expiresAt > Date.now() } catch { return false }
 }
 const requireAdmin = (request, response) => verifySession(request) || (send(response, 401, { error: 'Сессия истекла. Войдите снова' }), false)
+const calculateCustoms = async (input) => {
+  const fields = new URLSearchParams({
+    owner: String(input.owner || 1), age: String(input.age || '3-5'), engine: String(input.engine || 1),
+    power: String(Number(input.power) || 1), power_unit: String(input.power_unit || 1),
+    value: String(Number(input.value) || 1), price: String(Number(input.price) || 0), curr: String(input.curr || 'KRW'),
+  })
+  const result = await fetch('https://calcus.ru/calculate/Customs', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'DriveHub-KR/1.0' }, body: fields })
+  if (!result.ok) throw new Error('Сервис таможенного расчёта временно недоступен')
+  return result.json()
+}
 
 export default async function handler(request, response) {
   const path = pathname(request)
   try {
     if (request.method === 'GET' && path === '/api/health') return send(response, 200, { status: 'ok', runtime: 'vercel' })
+    if (request.method === 'POST' && path === '/api/customs') return send(response, 200, await calculateCustoms(request.body || {}))
 
     if (request.method === 'GET' && path === '/api/media') {
       const mediaPath = new URL(request.url, 'https://drivehub-kr.com').searchParams.get('path') || ''
@@ -99,7 +110,7 @@ export default async function handler(request, response) {
       if (!input.brand?.trim() || !input.name?.trim() || !Number(input.year) || !Number(input.price)) return send(response, 400, { error: 'Заполните марку, модель, год и цену' })
       const cars = await loadData('cars', seedCars)
       const now = new Date().toISOString()
-      const car = { id: Math.max(0, ...cars.map((item) => item.id)) + 1, brand: input.brand.trim(), name: input.name.trim(), year: Number(input.year), mileage: Number(input.mileage) || 0, fuel: input.fuel || 'Бензин', drive: input.drive || 'Передний привод', price: Number(input.price), tone: input.tone || 'graphite', photos: Array.isArray(input.photos) ? input.photos.filter(Boolean) : [], status: 'available', createdAt: now, updatedAt: now }
+      const car = { id: Math.max(0, ...cars.map((item) => item.id)) + 1, brand: input.brand.trim(), name: input.name.trim(), year: Number(input.year), mileage: Number(input.mileage) || 0, fuel: input.fuel || 'Бензин', drive: input.drive || 'Передний привод', price: Number(input.price), tone: input.tone || 'graphite', photos: Array.isArray(input.photos) ? input.photos.filter(Boolean) : [], equipment: Array.isArray(input.equipment) ? input.equipment : [], conditionMarks: Array.isArray(input.conditionMarks) ? input.conditionMarks : [], status: 'available', createdAt: now, updatedAt: now }
       cars.push(car); await saveData('cars', cars)
       return send(response, 201, car)
     }
@@ -110,7 +121,7 @@ export default async function handler(request, response) {
       const car = cars.find((item) => item.id === Number(adminCar[1]))
       if (!car) return send(response, 404, { error: 'Автомобиль не найден' })
       const input = request.body || {}
-      ;['brand', 'name', 'year', 'mileage', 'fuel', 'drive', 'price', 'tone', 'photos', 'status'].forEach((key) => { if (input[key] !== undefined) car[key] = input[key] })
+      ;['brand', 'name', 'year', 'mileage', 'fuel', 'drive', 'price', 'tone', 'photos', 'equipment', 'conditionMarks', 'status'].forEach((key) => { if (input[key] !== undefined) car[key] = input[key] })
       car.year = Number(car.year); car.mileage = Number(car.mileage); car.price = Number(car.price); car.updatedAt = new Date().toISOString()
       await saveData('cars', cars)
       return send(response, 200, car)
