@@ -1,0 +1,28 @@
+export const equipmentOptions = [
+  ['leather', 'Кожаный салон', '◇'],
+  ['rear-camera', 'Камера заднего вида', '▣'],
+  ['climate', 'Климат-контроль', '☼'],
+  ['parking-sensors', 'Парктроники', '◉'],
+  ['heated-seats', 'Подогрев сидений', '♨'],
+  ['cruise', 'Круиз-контроль', '◇'],
+  ['led-headlights', 'LED-фары', '◐'],
+  ['smart-key', 'Бесключевой доступ', '⌾'],
+  ['navigation', 'Навигация', '⌖'],
+  ['ventilated-seats', 'Вентиляция сидений', '≋'],
+  ['memory-seats', 'Память сидений', '♙'],
+  ['heated-steering', 'Подогрев руля', '◯'],
+  ['panorama', 'Панорамная крыша', '▱'],
+  ['blind-spot', 'Контроль слепых зон', '◒'],
+  ['lane-assist', 'Удержание в полосе', '∥'],
+  ['adaptive-cruise', 'Адаптивный круиз-контроль', '◎'],
+  ['electric-trunk', 'Электропривод багажника', '⌁'],
+  ['around-view', 'Камеры 360°', '⊕'],
+  ['wireless-charge', 'Беспроводная зарядка', 'ϟ'],
+  ['premium-audio', 'Премиальная аудиосистема', '♫'],
+  ['apple-carplay', 'Apple CarPlay / Android Auto', '▤'],
+  ['head-up-display', 'Проекционный дисплей', '▰'],
+  ['auto-parking', 'Автопарковка', 'Ⓟ'],
+  ['rain-sensor', 'Датчик дождя', '☂'],
+].map(([id, label, icon]) => ({ id, label, icon }))
+
+export const defaultEquipment = equipmentOptions.slice(0, 6).map(({ id }) => id)

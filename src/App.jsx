@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import heroImage from './assets/hero-cars.jpg'
 import AdminPanel from './AdminPanel'
+import { defaultEquipment, equipmentOptions } from './equipmentOptions'
 import './App.css'
 
 const fallbackCars = [
@@ -34,6 +35,7 @@ function App() {
     return fallbackCars.find((car) => car.id === id) || null
   })
   const [activePhoto, setActivePhoto] = useState(0)
+  const [equipmentOpen, setEquipmentOpen] = useState(false)
   const [requestSent, setRequestSent] = useState(false)
   const [requestError, setRequestError] = useState('')
   const [favorites, setFavorites] = useState(() => JSON.parse(localStorage.getItem('dh-favorites') || '[]'))
@@ -81,6 +83,7 @@ function App() {
 
   const openCar = (car) => {
     setSelectedCar(car)
+    setEquipmentOpen(false)
     setActivePhoto(0)
     setRequestSent(false)
     window.history.pushState({}, '', `/cars/${car.id}`)
@@ -120,6 +123,8 @@ function App() {
   if (selectedCar) {
     const exportPrice = selectedCar.price + 6200000
     const detailPhotos = selectedCar.photos?.length ? selectedCar.photos : [heroImage, heroImage, heroImage, heroImage]
+    const selectedEquipment = equipmentOptions.filter((option) => (Array.isArray(selectedCar.equipment) ? selectedCar.equipment : defaultEquipment).includes(option.id))
+    const visibleEquipment = equipmentOpen ? selectedEquipment : selectedEquipment.slice(0, 6)
     return (
       <main className="detail-page">
         <header className="header detail-header"><div className="container nav-wrap"><Mark /><button className="back-link" onClick={() => setSelectedCar(null)}>← Вернуться в каталог</button><a className="button button-outline" href="#detail-request">Связаться</a></div></header>
@@ -132,7 +137,7 @@ function App() {
 
           <section className="detail-grid">
             <article className="detail-card specs-card"><h2>Характеристики</h2><dl><div><dt>Год выпуска</dt><dd>{selectedCar.year}</dd></div><div><dt>Пробег</dt><dd>{formatNumber(selectedCar.mileage)} км</dd></div><div><dt>Двигатель</dt><dd>{selectedCar.fuel === 'Электро' ? 'Электродвигатель' : '2.5 л'}</dd></div><div><dt>Топливо</dt><dd>{selectedCar.fuel}</dd></div><div><dt>Коробка передач</dt><dd>Автомат</dd></div><div><dt>Привод</dt><dd>{selectedCar.drive}</dd></div><div><dt>Цвет</dt><dd>Чёрный</dd></div><div><dt>Страна</dt><dd>Южная Корея</dd></div></dl></article>
-            <article className="detail-card description-card"><h2>Описание</h2><p>{selectedCar.name} в отличном техническом состоянии. Автомобиль прошёл первичную проверку, имеет чистый салон и подтверждённую историю обслуживания.</p><h3>Комплектация</h3><div className="equipment"><span>◈<small>Кожаный салон</small></span><span>▱<small>Камера заднего вида</small></span><span>☼<small>Климат-контроль</small></span><span>◉<small>Парктроники</small></span><span>♨<small>Подогрев сидений</small></span><span>◇<small>Круиз-контроль</small></span></div></article>
+            <article className="detail-card description-card"><h2>Описание</h2><p>{selectedCar.name} в отличном техническом состоянии. Автомобиль прошёл первичную проверку, имеет чистый салон и подтверждённую историю обслуживания.</p><h3>Комплектация <small>{selectedEquipment.length} опций</small></h3>{selectedEquipment.length ? <><div className={`equipment ${equipmentOpen ? 'expanded' : ''}`}>{visibleEquipment.map((option) => <span key={option.id}><b>{option.icon}</b><small>{option.label}</small></span>)}</div>{selectedEquipment.length > 6 && <button type="button" className="equipment-toggle" aria-expanded={equipmentOpen} onClick={() => setEquipmentOpen((current) => !current)}>{equipmentOpen ? 'Скрыть комплектацию' : `Посмотреть все (${selectedEquipment.length})`} <i>{equipmentOpen ? '↑' : '↓'}</i></button>}</> : <p className="equipment-empty">Комплектация не указана</p>}</article>
             <article id="detail-request" className="detail-card request-card"><h2>Заказать экспорт</h2><p>Оставьте заявку — рассчитаем доставку в вашу страну.</p>{requestSent ? <div className="success-message"><b>✓ Заявка отправлена</b><span>Мы свяжемся с вами в ближайшее время.</span></div> : <form onSubmit={submitInquiry}><input name="name" required placeholder="Ваше имя" /><input name="phone" required type="tel" placeholder="Телефон / WhatsApp" /><select name="country" required defaultValue=""><option value="" disabled>Страна назначения</option><option>Россия</option><option>Казахстан</option><option>Германия</option><option>Другая страна</option></select><textarea name="message" placeholder="Комментарий (необязательно)" />{requestError && <span className="request-error">{requestError}</span>}<button className="button button-gold" type="submit">Отправить заявку</button></form>}</article>
           </section>
 
