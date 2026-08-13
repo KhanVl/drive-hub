@@ -48,6 +48,19 @@ export default function AdminPanel({ token, setToken, onClose, onCarsChanged }) 
     reader.onerror = reject
     reader.readAsDataURL(file)
   })
+  const preparePhoto = async (file) => {
+    if (!file.type.startsWith('image/')) throw new Error(`${file.name}: выберите изображение`)
+    const source = await createImageBitmap(file)
+    const scale = Math.min(1, 1920 / Math.max(source.width, source.height))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.round(source.width * scale)
+    canvas.height = Math.round(source.height * scale)
+    canvas.getContext('2d').drawImage(source, 0, 0, canvas.width, canvas.height)
+    source.close()
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', .84))
+    if (!blob) throw new Error(`${file.name}: не удалось обработать фотографию`)
+    return new File([blob], `${file.name.replace(/\.[^.]+$/, '')}.webp`, { type: 'image/webp' })
+  }
   const uploadPhotos = async (event) => {
     const files = [...event.target.files]
     if (!files.length) return
@@ -56,8 +69,9 @@ export default function AdminPanel({ token, setToken, onClose, onCarsChanged }) 
     try {
       const urls = []
       for (const file of files) {
-        if (file.size > 3_000_000) throw new Error(`${file.name}: файл больше 3 МБ`)
-        const data = await request('/api/admin/uploads', { method: 'POST', body: JSON.stringify({ name: file.name, data: await fileToDataUrl(file) }) })
+        const prepared = await preparePhoto(file)
+        if (prepared.size > 2_500_000) throw new Error(`${file.name}: после обработки файл больше 2,5 МБ`)
+        const data = await request('/api/admin/uploads', { method: 'POST', body: JSON.stringify({ name: prepared.name, data: await fileToDataUrl(prepared) }) })
         urls.push(data.url)
       }
       setForm((current) => ({ ...current, photos: [current.photos, ...urls].filter(Boolean).join('\n') }))

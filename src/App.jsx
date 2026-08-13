@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import heroImage from './assets/hero-cars.jpg'
+import heroBackground from './assets/hero-background.jpg'
 import logoDh from './assets/logo-dh.svg'
 import AdminPanel from './AdminPanel'
 import { defaultEquipment, equipmentOptions } from './equipmentOptions'
@@ -177,7 +178,6 @@ function App() {
   if (adminOpen) return <AdminPanel token={adminToken} setToken={setAdminToken} onClose={() => setAdminOpen(false)} onCarsChanged={() => fetch('/api/cars').then((response) => response.json()).then(setCars)} />
 
   if (selectedCar) {
-    const exportPrice = selectedCar.price + 6200000
     const detailPhotos = selectedCar.photos?.length ? selectedCar.photos : [heroImage, heroImage, heroImage, heroImage]
     const selectedEquipment = equipmentOptions.filter((option) => (Array.isArray(selectedCar.equipment) ? selectedCar.equipment : defaultEquipment).includes(option.id))
     const visibleEquipment = equipmentOpen ? selectedEquipment : selectedEquipment.slice(0, 6)
@@ -198,7 +198,7 @@ function App() {
           </section>
 
           <section className="vehicle-condition"><div className="condition-heading"><p className="eyebrow">Отчёт осмотра</p><h2>Состояние кузова</h2><p>{selectedCar.conditionMarks?.length ? 'На схеме отмечены обнаруженные особенности кузова.' : 'При осмотре кузова заметные повреждения не отмечены.'}</p></div><ConditionMap marks={selectedCar.conditionMarks || []}/><div className="damage-legend">{damageTypes.map((type) => <span key={type.id}><i style={{ background: type.color }}>{type.symbol}</i>{type.label}</span>)}</div></section>
-          <section className="export-row"><article className="export-process"><h2>Как проходит экспорт</h2><div>{steps.slice(0,4).map(([number,title]) => <span key={number}><b>{number}</b><small>{title}</small></span>)}</div></article><article className="export-total"><p>Примерная стоимость с доставкой</p><span>Казахстан</span><strong>₩ {formatNumber(exportPrice)}</strong><small>Предварительный расчёт, включая основные расходы</small><a href="#calculator">Открыть калькулятор растаможки →</a></article></section>
+          <section className="export-row"><article className="export-process"><h2>Как проходит экспорт</h2><div>{[['01', 'Выбор машины'], ['02', 'Осмотр'], ['03', 'Выкуп'], ['04', 'Подготовка автомобиля'], ['05', 'Отправка']].map(([number,title]) => <span key={number}><b>{number}</b><small>{title}</small></span>)}</div><p className="delivery-note">Для подробного расчёта доставки до вашего города или страны напишите нам в WhatsApp.</p><a className="whatsapp-calc" href="https://wa.me/821057377308" target="_blank" rel="noreferrer">Получить подробный расчёт в WhatsApp</a></article></section>
           <CustomsCalculator car={selectedCar}/>
         </div>
         <footer className="detail-footer"><div className="copyright">© 2026 DH Export. Все права защищены.</div></footer>
@@ -221,7 +221,7 @@ function App() {
         </div>
       </header>
 
-      <section className="hero" style={{ backgroundImage: `linear-gradient(90deg, rgba(5,10,15,.98) 0%, rgba(5,10,15,.76) 39%, rgba(5,10,15,.08) 76%), url(${heroImage})` }}>
+      <section className="hero" style={{ backgroundImage: `linear-gradient(90deg, rgba(5,10,15,.82) 0%, rgba(5,10,15,.52) 42%, rgba(5,10,15,.06) 76%), url(${heroBackground})` }}>
         <div className="container hero-content">
           <p className="eyebrow">Автомобили из Южной Кореи</p>
           <h1>Надёжные автомобили<br />из Кореи на экспорт</h1>

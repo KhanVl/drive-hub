@@ -1,4 +1,10 @@
 const exact = new Map([
+  ['км', 'km'], ['л', 'L'], ['опций', 'features'], ['г.', ''], ['Электродвигатель', 'Electric motor'],
+  ['Оставьте заявку — рассчитаем доставку в вашу страну.', 'Send an enquiry and we will calculate delivery to your country.'],
+  ['Заявка отправлена', 'Enquiry sent'], ['Мы свяжемся с вами в ближайшее время.', 'We will contact you shortly.'],
+  ['Добавить в избранное', 'Add to favourites'], ['В избранном', 'Saved'], ['Открыть меню', 'Open menu'],
+  ['При осмотре кузова заметные повреждения не отмечены.', 'No visible body damage was found during the inspection.'],
+  ['На схеме отмечены обнаруженные особенности кузова.', 'The detected body-condition findings are marked on the diagram.'],
   ['Главная', 'Home'], ['Авто в наличии', 'Cars in stock'], ['Как мы работаем', 'How it works'], ['Связаться', 'Contact us'],
   ['Автомобили из Южной Кореи', 'Cars from South Korea'], ['Надёжные автомобили', 'Reliable cars'], ['из Кореи на экспорт', 'exported from Korea'],
   ['Подбираем, проверяем и доставляем автомобили в любую точку мира', 'We source, inspect and deliver vehicles anywhere in the world'],
@@ -22,12 +28,25 @@ const exact = new Map([
 ])
 
 const patterns = [
+  [/^Открыть фото (\d+)$/u, 'Open photo $1'],
+  [/^(.+) в отличном техническом состоянии\. Автомобиль прошёл первичную проверку, имеет чистый салон и подтверждённую историю обслуживания\.$/u, '$1 is in excellent technical condition. The vehicle has passed an initial inspection and has a clean interior and verified service history.'],
   [/^(\d+) автомобил(?:ь|я|ей)$/u, '$1 vehicles'], [/^(♥?)\s*Избранное \((\d+)\)$/u, '♥ Favourites ($2)'],
   [/^(\d{4}) г\.$/u, '$1'], [/^([\d\s]+) км$/u, '$1 km'], [/^Фото (\d+) \/ (\d+)$/u, 'Photo $1 / $2'], [/^(\d+) опций$/u, '$1 features'],
   [/^Посмотреть все \((\d+)\)$/u, 'View all ($1)'], [/^Скрыть комплектацию$/u, 'Hide features'],
 ]
 
 const extra = new Map([
+  ['л.с.', 'hp'], ['кВт', 'kW'], ['см³', 'cm³'], ['Расчёт…', 'Calculating…'],
+  ['Расчёт утильсбора по утверждённым тарифам до 2030 года', 'Recycling fee estimate based on approved rates through 2030'],
+  ['Курсы валют и коэффициенты берутся в момент расчёта. Итог остаётся справочным до проверки документов таможенным специалистом.', 'Exchange rates and coefficients are applied at the time of calculation. The result is indicative until the documents are reviewed by a customs specialist.'],
+  ['Нажмите «Рассчитать», чтобы получить подробную разбивку платежей.', 'Click “Calculate” to see a detailed payment breakdown.'],
+  ['Схема состояния кузова автомобиля', 'Vehicle body condition diagram'], ['Открыть фото', 'Open photo'], ['Язык', 'Language'],
+  ['Память сидений', 'Seat memory'], ['Подогрев руля', 'Heated steering wheel'], ['Контроль слепых зон', 'Blind-spot monitoring'], ['Золотистый', 'Gold'], ['Оранжевый', 'Orange'], ['Жёлтый', 'Yellow'], ['Фиолетовый', 'Purple'],
+  ['На схеме отмечены обнаруженные особенности кузова.', 'The detected body-condition findings are marked on the diagram.'], ['При осмотре кузова заметные повреждения не отмечены.', 'No visible body damage was found during the inspection.'],
+  ['в отличном техническом состоянии. Автомобиль прошёл первичную проверку, имеет чистый салон и подтверждённую историю обслуживания.', ' is in excellent technical condition. The vehicle has passed an initial inspection and has a clean interior and verified service history.'],
+  ['Выбор машины', 'Vehicle selection'], ['Осмотр', 'Inspection'], ['Выкуп', 'Purchase'], ['Подготовка автомобиля', 'Vehicle preparation'], ['Отправка', 'Shipping'],
+  ['Для подробного расчёта доставки до вашего города или страны напишите нам в WhatsApp.', 'For a detailed delivery quote to your city or country, contact us on WhatsApp.'], ['Получить подробный расчёт в WhatsApp', 'Get a detailed quote on WhatsApp'],
+  ['Удержание в полосе', 'Lane keeping assist'], ['Адаптивный круиз-контроль', 'Adaptive cruise control'], ['Электропривод багажника', 'Power tailgate'], ['Беспроводная зарядка', 'Wireless charging'], ['Премиальная аудиосистема', 'Premium audio system'], ['Проекционный дисплей', 'Head-up display'], ['Автопарковка', 'Automatic parking'], ['Датчик дождя', 'Rain sensor'],
   ['Расчёт для России', 'Calculation for Russia'], ['Калькулятор растаможки автомобиля', 'Vehicle customs calculator'], ['Расчёт по параметрам автомобиля и коэффициентам, используемым сервисом CalcUS.', 'Estimate based on vehicle parameters and the coefficients used by CalcUS.'],
   ['Автомобиль ввозит', 'Importer'], ['Физическое лицо для личного пользования', 'Individual for personal use'], ['Физическое лицо для перепродажи', 'Individual for resale'], ['Юридическое лицо', 'Legal entity'], ['Возраст автомобиля', 'Vehicle age'], ['До 3 лет', 'Under 3 years'], ['От 3 до 5 лет', '3 to 5 years'], ['От 5 до 7 лет', '5 to 7 years'], ['Более 7 лет', 'Over 7 years'],
   ['Тип двигателя', 'Engine type'], ['Бензиновый', 'Petrol'], ['Дизельный', 'Diesel'], ['Электрический', 'Electric'], ['Последовательный гибрид', 'Series hybrid'], ['Параллельный гибрид', 'Parallel hybrid'], ['Мощность двигателя', 'Engine power'], ['Объём двигателя', 'Engine displacement'], ['Стоимость автомобиля', 'Vehicle price'], ['Рассчитать', 'Calculate'], ['Очистить', 'Clear'], ['Расчёт платежей', 'Payment breakdown'], ['Таможенный сбор', 'Customs processing fee'], ['Таможенная пошлина', 'Import duty'], ['Акциз', 'Excise duty'], ['НДС', 'VAT'], ['Утилизационный сбор', 'Recycling fee'], ['Полная стоимость растаможки', 'Total customs cost'], ['Автомобиль + растаможка', 'Vehicle + customs'], ['Заполните параметры', 'Enter vehicle details'],
@@ -59,5 +78,9 @@ export function translatePublicPage(root) {
       const translated = translateValue(current)
       if (translated !== current) element.setAttribute(attribute, translated)
     }
+  })
+  root.querySelectorAll('option').forEach((option) => {
+    const translated = translateValue(option.textContent)
+    if (translated !== option.textContent) option.textContent = translated
   })
 }
