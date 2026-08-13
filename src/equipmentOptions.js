@@ -1,3 +1,6 @@
+import EquipmentIcon from './EquipmentIcon'
+import { createElement } from 'react'
+
 export const equipmentOptions = [
   ['leather', 'Кожаный салон', '◇'],
   ['rear-camera', 'Камера заднего вида', '▣'],
@@ -23,6 +26,6 @@ export const equipmentOptions = [
   ['head-up-display', 'Проекционный дисплей', '▰'],
   ['auto-parking', 'Автопарковка', 'Ⓟ'],
   ['rain-sensor', 'Датчик дождя', '☂'],
-].map(([id, label, icon]) => ({ id, label, icon }))
+].map(([id, label]) => ({ id, label, icon: createElement(EquipmentIcon, { name: id }) }))
 
 export const defaultEquipment = equipmentOptions.slice(0, 6).map(({ id }) => id)

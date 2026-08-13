@@ -2236,6 +2236,23 @@ footer {
     line-height: 1
 }
 
+.equipment-icon {
+    display: block;
+    width: 20px;
+    height: 20px;
+    margin: auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.65;
+    stroke-linecap: round;
+    stroke-linejoin: round
+}
+
+.equipment span b .equipment-icon {
+    width: 23px;
+    height: 23px
+}
+
 .equipment small {
     line-height: 1.35
 }
