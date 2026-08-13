@@ -15,6 +15,7 @@ const port = Number(process.env.PORT || 4000)
 let syncRunning = false
 const sessions = new Map()
 const loginAttempts = new Map()
+const publicAttempts = new Map()
 const sessionLifetime = 12 * 60 * 60 * 1000
 const isAdmin = (request) => {
   const token = request.headers.authorization?.replace(/^Bearer\s+/, '')
@@ -28,6 +29,13 @@ const safePasswordMatch = (actual, expected) => {
   const expectedHash = scryptSync(String(expected), salt, 64)
   return timingSafeEqual(actualHash, expectedHash)
 }
+const allowRequest = (request, key, limit, windowMs) => {
+  const id = `${key}:${request.socket.remoteAddress || 'unknown'}`; const now = Date.now(); const current = publicAttempts.get(id)
+  if (!current || current.resetAt <= now) { publicAttempts.set(id, { count: 1, resetAt: now + windowMs }); return true }
+  if (current.count >= limit) return false
+  current.count += 1; return true
+}
+const cleanText = (value, max) => String(value || '').trim().slice(0, max)
 
 const readJson = async (name) => JSON.parse(await readFile(dataPath(name), 'utf8'))
 const writeJson = async (name, value) => writeFile(dataPath(name), `${JSON.stringify(value, null, 2)}\n`)
@@ -64,7 +72,10 @@ createServer(async (request, response) => {
 
   try {
     if (request.method === 'GET' && url.pathname === '/api/health') return send(response, 200, { status: 'ok', time: new Date().toISOString() })
-    if (request.method === 'POST' && url.pathname === '/api/customs') return send(response, 200, await calculateCustoms(await readBody(request)))
+    if (request.method === 'POST' && url.pathname === '/api/customs') {
+      if (!allowRequest(request, 'customs', 30, 60_000)) return send(response, 429, { error: 'Слишком много расчётов. Повторите через минуту' })
+      return send(response, 200, await calculateCustoms(await readBody(request)))
+    }
 
     if (request.method === 'POST' && url.pathname === '/api/admin/login') {
       const ip = request.socket.remoteAddress || 'unknown'
@@ -111,10 +122,13 @@ createServer(async (request, response) => {
     }
 
     if (request.method === 'POST' && url.pathname === '/api/inquiries') {
+      if (!allowRequest(request, 'inquiry', 5, 10 * 60_000)) return send(response, 429, { error: 'Слишком много заявок. Повторите позже' })
       const input = await readBody(request)
-      if (!input.name?.trim() || !input.phone?.trim() || !input.country?.trim()) return send(response, 400, { error: 'Заполните имя, телефон и страну' })
+      const name = cleanText(input.name, 80); const phone = cleanText(input.phone, 40); const country = cleanText(input.country, 80); const message = cleanText(input.message, 1000)
+      if (!name || !phone || !country) return send(response, 400, { error: 'Заполните имя, телефон и страну' })
+      if (!/^[+\d\s()-]{6,40}$/.test(phone)) return send(response, 400, { error: 'Проверьте номер телефона' })
       const inquiries = await readJson('inquiries.json')
-      const inquiry = { id: Date.now(), carId: Number(input.carId) || null, name: input.name.trim(), phone: input.phone.trim(), country: input.country.trim(), message: input.message?.trim() || '', status: 'new', createdAt: new Date().toISOString() }
+      const inquiry = { id: Date.now(), carId: Number(input.carId) || null, name, phone, country, message, status: 'new', createdAt: new Date().toISOString() }
       inquiries.push(inquiry)
       await writeJson('inquiries.json', inquiries)
       return send(response, 201, { id: inquiry.id, status: inquiry.status })

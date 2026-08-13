@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100" role="img" aria-labelledby="title">
+  <title id="title">DH Export</title>
+  <g fill="#fff">
+    <!-- Narrow open D with thin angled terminals -->
+    <path d="M5 10h23c18 0 29 12 29 30S46 70 28 70H5l7-6h16c14 0 22-9 22-24s-8-24-22-24H12L5 10Z"/>
+    <!-- Inner upright -->
+    <path d="M29 29l6 4v22h-6V29Z"/>
+    <!-- Slim H -->
+    <path d="M58 42h9V28l6 4v39h-6V49h-9v-7Z"/>
+  </g>
+  <text x="39" y="93" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="800" letter-spacing="1" text-anchor="middle">EXPORT</text>
+</svg>

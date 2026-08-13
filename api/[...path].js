@@ -3,6 +3,7 @@ import { get, list, put } from '@vercel/blob'
 import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto'
 
 const dataPrefix = 'drivehub/data'
+const requestBuckets = new Map()
 const seedCars = [
   { id: 1, brand: 'Genesis', name: 'Genesis G80 2.5T', year: 2022, mileage: 34000, fuel: 'Бензин', drive: 'Задний привод', price: 42900000, tone: 'graphite', photos: [], status: 'available' },
   { id: 2, brand: 'Hyundai', name: 'Hyundai Grandeur 2.5', year: 2023, mileage: 18500, fuel: 'Бензин', drive: 'Передний привод', price: 39500000, tone: 'silver', photos: [], status: 'available' },
@@ -15,6 +16,14 @@ const seedCars = [
 ]
 
 const send = (response, status, data) => response.status(status).json(data)
+const clientIp = (request) => String(request.headers['x-forwarded-for'] || request.headers['x-real-ip'] || 'unknown').split(',')[0].trim()
+const allowRequest = (request, key, limit, windowMs) => {
+  const id = `${key}:${clientIp(request)}`; const now = Date.now(); const current = requestBuckets.get(id)
+  if (!current || current.resetAt <= now) { requestBuckets.set(id, { count: 1, resetAt: now + windowMs }); return true }
+  if (current.count >= limit) return false
+  current.count += 1; return true
+}
+const cleanText = (value, max) => String(value || '').trim().slice(0, max)
 const pathname = (request) => {
   const route = request.query?.route
   if (route) return `/api/${Array.isArray(route) ? route.join('/') : route}`
@@ -65,9 +74,15 @@ const calculateCustoms = async (input) => {
 
 export default async function handler(request, response) {
   const path = pathname(request)
+  response.setHeader('X-Content-Type-Options', 'nosniff')
+  response.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
   try {
     if (request.method === 'GET' && path === '/api/health') return send(response, 200, { status: 'ok', runtime: 'vercel' })
-    if (request.method === 'POST' && path === '/api/customs') return send(response, 200, await calculateCustoms(request.body || {}))
+    if (request.method === 'POST' && path === '/api/customs') {
+      if (!allowRequest(request, 'customs', 30, 60_000)) return send(response, 429, { error: 'Слишком много расчётов. Повторите через минуту' })
+      return send(response, 200, await calculateCustoms(request.body || {}))
+    }
 
     if (request.method === 'GET' && path === '/api/media') {
       const mediaPath = new URL(request.url, 'https://drivehub-kr.com').searchParams.get('path') || ''
@@ -81,6 +96,7 @@ export default async function handler(request, response) {
     }
 
     if (request.method === 'POST' && path === '/api/admin/login') {
+      if (!allowRequest(request, 'login', 5, 15 * 60_000)) return send(response, 429, { error: 'Слишком много попыток. Повторите через 15 минут' })
       if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD || !sessionSecret()) return send(response, 503, { error: 'Переменные админки не настроены в Vercel' })
       const { username = '', password = '' } = request.body || {}
       if (!safeEqual(username, process.env.ADMIN_USERNAME) || !safeEqual(password, process.env.ADMIN_PASSWORD)) return send(response, 401, { error: 'Неверный логин или пароль' })
@@ -128,10 +144,13 @@ export default async function handler(request, response) {
     }
 
     if (request.method === 'POST' && path === '/api/inquiries') {
+      if (!allowRequest(request, 'inquiry', 5, 10 * 60_000)) return send(response, 429, { error: 'Слишком много заявок. Повторите позже' })
       const input = request.body || {}
-      if (!input.name?.trim() || !input.phone?.trim() || !input.country?.trim()) return send(response, 400, { error: 'Заполните имя, телефон и страну' })
+      const name = cleanText(input.name, 80); const phone = cleanText(input.phone, 40); const country = cleanText(input.country, 80); const message = cleanText(input.message, 1000)
+      if (!name || !phone || !country) return send(response, 400, { error: 'Заполните имя, телефон и страну' })
+      if (!/^[+\d\s()-]{6,40}$/.test(phone)) return send(response, 400, { error: 'Проверьте номер телефона' })
       const inquiries = await loadData('inquiries', [])
-      const inquiry = { id: Date.now(), carId: Number(input.carId) || null, name: input.name.trim(), phone: input.phone.trim(), country: input.country.trim(), message: input.message?.trim() || '', status: 'new', createdAt: new Date().toISOString() }
+      const inquiry = { id: Date.now(), carId: Number(input.carId) || null, name, phone, country, message, status: 'new', createdAt: new Date().toISOString() }
       inquiries.push(inquiry); await saveData('inquiries', inquiries)
       return send(response, 201, { id: inquiry.id, status: inquiry.status })
     }

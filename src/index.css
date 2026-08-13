@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 
 :root { font-family: 'Manrope', Arial, sans-serif; color: #f5f6f7; background: #080d12; font-synthesis: none; text-rendering: optimizeLegibility; }
+html, body, button, input, select, textarea { font-family: 'Manrope', Arial, sans-serif; }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body { margin: 0; min-width: 320px; background: #080d12; }

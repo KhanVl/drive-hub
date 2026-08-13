@@ -23,6 +23,7 @@ CREATE TABLE car_photos (
 
 CREATE TABLE inquiries (
   id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
   car_id BIGINT REFERENCES cars(id) ON DELETE SET NULL,
   name TEXT NOT NULL,
   phone TEXT NOT NULL,
@@ -35,3 +36,18 @@ CREATE TABLE inquiries (
 
 CREATE INDEX cars_status_updated_idx ON cars(status, updated_at DESC);
 CREATE INDEX inquiries_status_created_idx ON inquiries(status, created_at DESC);
+CREATE INDEX inquiries_user_created_idx ON inquiries(user_id, created_at DESC);
+
+ALTER TABLE cars ENABLE ROW LEVEL SECURITY;
+ALTER TABLE car_photos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE inquiries ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public can view available cars" ON cars FOR SELECT USING (status = 'available');
+CREATE POLICY "Public can view photos of available cars" ON car_photos FOR SELECT USING (
+  EXISTS (SELECT 1 FROM cars WHERE cars.id = car_photos.car_id AND cars.status = 'available')
+);
+CREATE POLICY "Users can view own inquiries" ON inquiries FOR SELECT TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY "Users can create own inquiries" ON inquiries FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Admins manage cars" ON cars FOR ALL TO authenticated USING ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin') WITH CHECK ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+CREATE POLICY "Admins manage car photos" ON car_photos FOR ALL TO authenticated USING ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin') WITH CHECK ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+CREATE POLICY "Admins manage inquiries" ON inquiries FOR ALL TO authenticated USING ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin') WITH CHECK ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
