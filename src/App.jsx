@@ -8,6 +8,7 @@ import { damageTypes } from './damageTypes'
 import CustomsCalculator from './CustomsCalculator'
 import { getCarColor } from './carColors'
 import { translatePublicPage } from './publicTranslations'
+import { ArrowIcon, HeartIcon, SearchIcon } from './UiIcon'
 import './App.css'
 
 const fallbackCars = [
@@ -244,9 +245,9 @@ function App() {
           </div>
 
           <section id="cars" className="cars-section">
-            <div className="section-title"><div><p className="eyebrow">Каталог</p><h2>Автомобили в наличии</h2></div><div className="catalog-heading-actions"><button className={favoritesOnly ? 'active' : ''} onClick={() => setFavoritesOnly(!favoritesOnly)}>♥ Избранное ({favorites.length})</button><span className="results-count">{filteredCars.length} автомобилей</span></div></div>
+            <div className="section-title"><div><p className="eyebrow">Каталог</p><h2>Автомобили в наличии</h2></div><div className="catalog-heading-actions"><button className={favoritesOnly ? 'active' : ''} onClick={() => setFavoritesOnly(!favoritesOnly)}><HeartIcon filled={favoritesOnly} /><span>Избранное ({favorites.length})</span></button><span className="results-count">{filteredCars.length} автомобилей</span></div></div>
             <div className="catalog-filters">
-              <label className="search-field"><span>⌕</span><input name="search" value={filters.search} onChange={changeFilter} placeholder="Поиск по модели" /></label>
+              <label className="search-field"><span><SearchIcon /></span><input name="search" value={filters.search} onChange={changeFilter} placeholder="Поиск по модели" /></label>
               <select name="brand" value={filters.brand} onChange={changeFilter}><option>Все марки</option><option>Genesis</option><option>Hyundai</option><option>Kia</option></select>
               <select name="year" value={filters.year} onChange={changeFilter}><option>Любой год</option><option value="2023">От 2023 года</option><option value="2022">От 2022 года</option><option value="2021">От 2021 года</option></select>
               <select name="fuel" value={filters.fuel} onChange={changeFilter}><option>Любое топливо</option><option>Бензин</option><option>Дизель</option><option>Электро</option></select>
@@ -257,15 +258,15 @@ function App() {
             <div className="car-grid">
               {visibleCars.map((car) => (
                 <article className="car-card" key={car.id} role="link" tabIndex="0" aria-label={`Открыть ${car.name}`} onClick={() => openCarFromCard(car)} onKeyDown={(event) => { if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('button')) { event.preventDefault(); openCar(car) } }}>
-                  <div className={`car-visual ${car.tone}`} style={{ backgroundImage: `url(${car.photos?.[0] || heroImage})`, backgroundSize: 'cover', backgroundPosition: car.photos?.[0] ? 'center' : `${35 + (car.id % 4) * 18}% center` }}><em>В НАЛИЧИИ</em><button className={favorites.includes(car.id) ? 'selected' : ''} onClick={(event) => { event.stopPropagation(); toggleFavorite(car.id) }} aria-label="Добавить в избранное">{favorites.includes(car.id) ? '♥' : '♡'}</button></div>
-                  <div className="car-info"><h3>{car.name}</h3><p>{car.year} г. <i>•</i> {formatNumber(car.mileage)} км</p><strong>₩ {formatNumber(car.price)}</strong><div className="tags"><span>{car.fuel}</span><span>Автомат</span><span>{car.drive}</span></div><button className="details-button" type="button" onClick={(event) => { event.stopPropagation(); openCar(car) }}>Подробнее <span>→</span></button></div>
+                  <div className={`car-visual ${car.tone}`} style={{ backgroundImage: `url(${car.photos?.[0] || heroImage})`, backgroundSize: 'cover', backgroundPosition: car.photos?.[0] ? 'center' : `${35 + (car.id % 4) * 18}% center` }}><em>В НАЛИЧИИ</em><button className={favorites.includes(car.id) ? 'selected' : ''} onClick={(event) => { event.stopPropagation(); toggleFavorite(car.id) }} aria-label="Добавить в избранное"><HeartIcon filled={favorites.includes(car.id)} /></button></div>
+                  <div className="car-info"><h3>{car.name}</h3><p>{car.year} г. <i>•</i> {formatNumber(car.mileage)} км</p><strong>₩ {formatNumber(car.price)}</strong><div className="tags"><span>{car.fuel}</span><span>Автомат</span><span>{car.drive}</span></div><button className="details-button" type="button" onClick={(event) => { event.stopPropagation(); openCar(car) }}>Подробнее <span><ArrowIcon /></span></button></div>
                 </article>
               ))}
             </div>
             {totalCatalogPages > 1 && <div className="catalog-pagination" role="navigation" aria-label="Страницы каталога">
-              <button type="button" disabled={currentCatalogPage === 1} onClick={() => openCatalogPage(currentCatalogPage - 1)} aria-label="Предыдущая страница">‹</button>
+              <button type="button" disabled={currentCatalogPage === 1} onClick={() => openCatalogPage(currentCatalogPage - 1)} aria-label="Предыдущая страница"><ArrowIcon direction="left" /></button>
               {Array.from({ length: totalCatalogPages }, (_, index) => index + 1).map((page) => <button type="button" className={page === currentCatalogPage ? 'active' : ''} aria-current={page === currentCatalogPage ? 'page' : undefined} onClick={() => openCatalogPage(page)} key={page}>{page}</button>)}
-              <button type="button" disabled={currentCatalogPage === totalCatalogPages} onClick={() => openCatalogPage(currentCatalogPage + 1)} aria-label="Следующая страница">›</button>
+              <button type="button" disabled={currentCatalogPage === totalCatalogPages} onClick={() => openCatalogPage(currentCatalogPage + 1)} aria-label="Следующая страница"><ArrowIcon /></button>
             </div>}
             {!filteredCars.length && <div className="empty-state"><b>Автомобили не найдены</b><p>Попробуйте изменить параметры поиска.</p><button type="button" onClick={resetFilters}>Сбросить фильтры</button></div>}
           </section>

@@ -58,6 +58,13 @@
 
 .brand{height:66px;overflow:visible}
 .brand img{display:block;width:100%;height:100%;object-fit:contain}
+.admin-page .detail-header .brand {
+    background: url('./assets/logo-dh.svg') center / contain no-repeat
+}
+.admin-page .detail-header .brand span,
+.admin-page .detail-header .brand small {
+    visibility: hidden
+}
 .footer-grid .brand{width:64px;height:76px}
 .footer-grid .brand img{width:100%;height:100%}
 
@@ -328,13 +335,22 @@ h1 {
 }
 
 .catalog-filters select {
-    padding: 0 12px;
+    appearance: none;
+    padding: 0 44px 0 14px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cbd1d6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 9 5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 15px;
     cursor: pointer
 }
 
 .catalog-filters select:focus,
 .search-field:focus-within {
     border-color: #9d7930
+}
+
+.catalog-filters select:focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d8aa47' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 15 5-5 5 5'/%3E%3C/svg%3E")
 }
 
 .search-field {
@@ -347,6 +363,15 @@ h1 {
 .search-field span {
     color: var(--gold);
     font-size: 20px
+}
+
+.search-field .search-icon {
+    width: 17px;
+    height: 17px
+}
+
+.chevron-icon.left {
+    transform: rotate(180deg)
 }
 
 .search-field input {
@@ -445,6 +470,8 @@ h1 {
 
 .car-visual button {
     position: absolute;
+    display: grid;
+    place-items: center;
     right: 10px;
     top: 9px;
     width: 30px;
@@ -453,7 +480,8 @@ h1 {
     border: 1px solid rgba(255, 255, 255, .25);
     background: rgba(0, 0, 0, .35);
     color: white;
-    font-size: 17px
+    font-size: 17px;
+    cursor: pointer
 }
 
 .car-info {
@@ -509,6 +537,8 @@ h1 {
 }
 
 .details-button span {
+    display: grid;
+    place-items: center;
     color: var(--gold);
     font-size: 14px
 }
@@ -804,6 +834,31 @@ footer {
     color: #aeb6bd;
     font-size: 10px;
     cursor: pointer
+}
+
+.ui-icon {
+    display: block;
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round
+}
+
+.heart-icon {
+    width: 16px;
+    height: 16px
+}
+
+.arrow-icon.left {
+    transform: rotate(180deg)
+}
+
+.details-button .arrow-icon {
+    width: 16px;
+    height: 16px
 }
 
 .gallery {
@@ -3025,6 +3080,24 @@ footer {
 .catalog-pagination button:disabled {
     opacity: .35;
     cursor: not-allowed
+}
+
+.catalog-pagination .arrow-icon {
+    width: 14px;
+    height: 14px
+}
+
+.catalog-heading-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px
+}
+
+.catalog-heading-actions .heart-icon {
+    width: 13px;
+    height: 13px;
+    flex: 0 0 auto
 }
 
 .catalog-filters{position:relative;z-index:10}
