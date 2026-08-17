@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "server": "node --watch server/server.js",
+    "server": "node server/server.js",
     "server:start": "node server/server.js",
     "production": "node server/server.js",
     "import:check": "node server/importer.js --file server/data/feed-example.json --dry-run",
@@ -28,5 +28,8 @@
     "eslint-plugin-react-refresh": "^0.5.3",
     "globals": "^17.7.0",
     "vite": "^8.1.1"
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true
   }
 }

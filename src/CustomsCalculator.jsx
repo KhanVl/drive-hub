@@ -2,6 +2,36 @@ import { useState } from 'react'
 
 const numberFromResult = (value) => Number(String(value || '0').replace(/[^\d,.-]/g, '').replace(',', '.')) || 0
 
+function NumberStepper({ name, value, onChange, min, max, step = 1 }) {
+  const parseValue = () => Number(String(value ?? '0').replace(',', '.')) || 0
+  const updateValue = (nextValue) => {
+    const safeValue = Number.isFinite(nextValue) ? nextValue : 0
+    onChange({ target: { name, value: String(safeValue) } })
+  }
+
+  return (
+    <div className="custom-number-field">
+      <input
+        name={name}
+        type="number"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={onChange}
+      />
+      <div className="custom-number-stepper" aria-label={`Регулировка ${name}`}>
+        <button type="button" aria-label={`Увеличить ${name}`} onClick={() => updateValue(parseValue() + step)}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 14.5 12 9l5 5.5" /></svg>
+        </button>
+        <button type="button" aria-label={`Уменьшить ${name}`} onClick={() => updateValue(parseValue() - step)}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9.5 12 15l5-5.5" /></svg>
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function CustomsCalculator({ car }) {
   const age = Math.max(0, new Date().getFullYear() - Number(car.year || 2023))
   const [form, setForm] = useState({
@@ -49,9 +79,9 @@ export default function CustomsCalculator({ car }) {
         <label><span>Автомобиль ввозит</span><select name="owner" value={form.owner} onChange={change}><option value="1">Физическое лицо для личного пользования</option><option value="3">Физическое лицо для перепродажи</option><option value="2">Юридическое лицо</option></select></label>
         <label><span>Возраст автомобиля</span><select name="age" value={form.age} onChange={change}><option value="0-3">До 3 лет</option><option value="3-5">От 3 до 5 лет</option><option value="5-7">От 5 до 7 лет</option><option value="7-0">Более 7 лет</option></select></label>
         <label><span>Тип двигателя</span><select name="engine" value={form.engine} onChange={change}><option value="1">Бензиновый</option><option value="2">Дизельный</option><option value="4">Электрический</option><option value="5">Последовательный гибрид</option><option value="6">Параллельный гибрид</option></select></label>
-        <label><span>Мощность двигателя</span><div><input name="power" type="number" min="1" step="0.01" value={form.power} onChange={change}/><select name="power_unit" value={form.power_unit} onChange={change}><option value="1">л.с.</option><option value="2">кВт</option></select></div></label>
-        {['1','2','6'].includes(form.engine) && <label><span>Объём двигателя</span><div><input name="value" type="number" min="1" max="10000" value={form.value} onChange={change}/><em>см³</em></div></label>}
-        <label><span>Стоимость автомобиля</span><div><input name="price" type="number" min="0" value={form.price} onChange={change}/><select name="curr" value={form.curr} onChange={change}><option value="KRW">KRW</option><option value="RUB">RUB</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="CNY">CNY</option><option value="JPY">JPY</option></select></div></label>
+        <label><span>Мощность двигателя</span><div><NumberStepper name="power" min="1" step="0.01" value={form.power} onChange={change}/><select name="power_unit" value={form.power_unit} onChange={change}><option value="1">л.с.</option><option value="2">кВт</option></select></div></label>
+        {['1','2','6'].includes(form.engine) && <label><span>Объём двигателя</span><div><NumberStepper name="value" min="1" max="10000" value={form.value} onChange={change}/><em>см³</em></div></label>}
+        <label><span>Стоимость автомобиля</span><div><NumberStepper name="price" min="0" value={form.price} onChange={change}/><select name="curr" value={form.curr} onChange={change}><option value="KRW">KRW</option><option value="RUB">RUB</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="CNY">CNY</option><option value="JPY">JPY</option></select></div></label>
         <div className="calculator-actions"><button className="button button-gold" disabled={loading}>{loading ? 'Расчёт…' : 'Рассчитать'}</button><button type="button" onClick={reset}>Очистить</button></div>
         {error && <p className="calculator-error">{error}</p>}
       </form>
