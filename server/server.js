@@ -11,7 +11,7 @@ const root = dirname(fileURLToPath(import.meta.url))
 const dataPath = (name) => join(root, 'data', name)
 const distPath = join(root, '..', 'dist')
 const uploadsPath = join(root, '..', 'storage', 'uploads')
-const port = Number(process.env.PORT || 4000)
+const port = Number(process.env.PORT || 4100)
 let syncRunning = false
 const sessions = new Map()
 const loginAttempts = new Map()
