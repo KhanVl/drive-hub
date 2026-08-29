@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import heroImage from './assets/hero-cars.jpg'
-import heroBackground from './assets/hero-background.jpg'
+import heroBackground from './assets/hero-background-hd.jpg'
 import logoDh from './assets/logo-dh.svg'
 import AdminPanel from './AdminPanel'
 import { defaultEquipment, equipmentOptions } from './equipmentOptions'
