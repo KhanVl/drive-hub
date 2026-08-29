@@ -55,6 +55,7 @@ function App() {
   const suppressCardClick = useRef(false)
   const [catalogPage, setCatalogPage] = useState(1)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [activeSection, setActiveSection] = useState('top')
   const [language, setLanguage] = useState(() => localStorage.getItem('dh-language') || 'ru')
   const isEnglish = language === 'en'
   const localizeLabel = (ruText, enText) => isEnglish ? enText : ruText
@@ -142,6 +143,8 @@ function App() {
   })
 
   useEffect(() => {
+    // Keep the neutral filter labels in sync when the interface language changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFilters((current) => ({
       ...current,
       brand: current.brand === 'Все марки' || current.brand === 'All makes' ? (isEnglish ? 'All makes' : 'Все марки') : current.brand,
@@ -150,7 +153,7 @@ function App() {
       maxPrice: current.maxPrice === 'Любая цена' || current.maxPrice === 'Any price' ? (isEnglish ? 'Any price' : 'Любая цена') : current.maxPrice,
       sort: current.sort === 'Сначала новые' || current.sort === 'Newest first' ? (isEnglish ? 'Newest first' : 'Сначала новые') : current.sort,
     }))
-  }, [language])
+  }, [isEnglish])
 
   const closeMenu = () => setMenuOpen(false)
   const selectSection = (section) => {
@@ -236,7 +239,6 @@ function App() {
   const anyYear = isEnglish ? 'Any year' : 'Любой год'
   const anyFuel = isEnglish ? 'Any fuel' : 'Любое топливо'
   const anyPrice = isEnglish ? 'Any price' : 'Любая цена'
-  const newestFirst = isEnglish ? 'Newest first' : 'Сначала новые'
   const lowToHigh = isEnglish ? 'Price: low to high' : 'Цена по возрастанию'
   const highToLow = isEnglish ? 'Price: high to low' : 'Цена по убыванию'
   const filteredCars = cars
