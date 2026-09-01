@@ -23,7 +23,7 @@ export default function AdminPanel({ token, setToken, onClose, onCarsChanged }) 
     const text = await response.text()
     let data
     try { data = text ? JSON.parse(text) : {} } catch { throw new Error('Сервер Vercel API ещё не настроен или не опубликован') }
-    if (!response.ok) throw new Error(data.error || 'Ошибка сервера')
+    if (!response.ok) throw new Error(data.error || (response.status === 413 ? 'Фотография слишком большая для загрузки' : 'Ошибка сервера'))
     return data
   }
 
@@ -75,7 +75,7 @@ export default function AdminPanel({ token, setToken, onClose, onCarsChanged }) 
         urls.push(data.url)
       }
       setForm((current) => ({ ...current, photos: [current.photos, ...urls].filter(Boolean).join('\n') }))
-    } catch (uploadError) { setError(uploadError.message) }
+    } catch (uploadError) { setError(`Не удалось загрузить фотографию: ${uploadError.message}`) }
     finally { setUploading(false); event.target.value = '' }
   }
   const removePhoto = (url) => setForm((current) => ({ ...current, photos: String(current.photos).split('\n').filter((item) => item.trim() && item.trim() !== url).join('\n') }))

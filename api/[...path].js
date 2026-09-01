@@ -35,15 +35,18 @@ const safeEqual = (left, right) => {
 }
 
 const blobToken = () => process.env.BLOB_READ_WRITE_TOKEN
+// New Vercel Blob connections authenticate through the function's OIDC token.
+// Passing `token: undefined` forces the legacy token path, so omit the option
+// entirely unless this deployment explicitly has a read/write token.
+const blobAuth = () => blobToken() ? { token: blobToken() } : {}
 const loadData = async (name, fallback) => {
-  const token = blobToken()
-  const result = await list({ prefix: `${dataPrefix}/${name}.json`, limit: 1, token })
+  const result = await list({ prefix: `${dataPrefix}/${name}.json`, limit: 1, ...blobAuth() })
   if (!result.blobs.length) return structuredClone(fallback)
-  const blob = await get(result.blobs[0].pathname, { access: 'private', useCache: false, token })
+  const blob = await get(result.blobs[0].pathname, { access: 'private', useCache: false, ...blobAuth() })
   if (!blob || blob.statusCode !== 200) throw new Error(`Не удалось прочитать ${name}`)
   return new Response(blob.stream).json()
 }
-const saveData = async (name, data) => put(`${dataPrefix}/${name}.json`, JSON.stringify(data), { access: 'private', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json', token: blobToken() })
+const saveData = async (name, data) => put(`${dataPrefix}/${name}.json`, JSON.stringify(data), { access: 'private', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json', ...blobAuth() })
 
 const sessionSecret = () => process.env.SESSION_SECRET || ''
 const createSession = (username) => {
@@ -87,7 +90,7 @@ export default async function handler(request, response) {
     if (request.method === 'GET' && path === '/api/media') {
       const mediaPath = new URL(request.url, 'https://drivehub-kr.com').searchParams.get('path') || ''
       if (!mediaPath.startsWith('drivehub/cars/')) return send(response, 400, { error: 'Некорректный путь' })
-      const media = await get(mediaPath, { access: 'private', token: blobToken() })
+      const media = await get(mediaPath, { access: 'private', ...blobAuth() })
       if (!media || media.statusCode !== 200) return send(response, 404, { error: 'Файл не найден' })
       const body = Buffer.from(await new Response(media.stream).arrayBuffer())
       response.setHeader('Content-Type', media.blob.contentType)
@@ -177,7 +180,7 @@ export default async function handler(request, response) {
       const buffer = Buffer.from(match[2], 'base64')
       if (!buffer.length || buffer.length > 3_000_000) return send(response, 400, { error: 'На Vercel фотография должна быть не больше 3 МБ' })
       const ext = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[match[1]]
-      const blob = await put(`drivehub/cars/${Date.now()}-${randomUUID()}.${ext}`, buffer, { access: 'private', contentType: match[1], token: blobToken() })
+      const blob = await put(`drivehub/cars/${Date.now()}-${randomUUID()}.${ext}`, buffer, { access: 'private', contentType: match[1], ...blobAuth() })
       return send(response, 201, { url: `/api/media?path=${encodeURIComponent(blob.pathname)}` })
     }
 
