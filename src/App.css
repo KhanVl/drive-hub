@@ -1689,12 +1689,34 @@ footer {
 
 .admin-cars-layout>.car-editor {
     grid-column: 1;
-    grid-row: 2
+    grid-row: 1;
+    position: static;
+    margin-top: 178px
 }
 
 .admin-car-list {
     grid-column: 2;
-    grid-row: 1 / span 2
+    grid-row: 1;
+    max-height: min(72vh, 680px);
+    padding-right: 5px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #59636c #0b1218
+}
+
+.admin-car-list::-webkit-scrollbar {
+    width: 7px
+}
+
+.admin-car-list::-webkit-scrollbar-track {
+    background: #0b1218;
+    border-radius: 7px
+}
+
+.admin-car-list::-webkit-scrollbar-thumb {
+    border-radius: 7px;
+    background: #59636c
 }
 
 .powertrain-editor {
@@ -1863,7 +1885,13 @@ footer {
     .admin-cars-layout>.car-editor,
     .admin-car-list {
         grid-column: 1;
-        grid-row: auto
+        grid-row: auto;
+        margin-top: 0
+    }
+    .admin-car-list {
+        max-height: none;
+        padding-right: 0;
+        overflow: visible
     }
     .admin-car-list article {
         grid-template-columns: 120px 1fr
