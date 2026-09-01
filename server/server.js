@@ -209,6 +209,15 @@ createServer(async (request, response) => {
       await writeJson('inquiries.json', inquiries)
       return send(response, 200, inquiry)
     }
+    if (request.method === 'DELETE' && inquiryMatch) {
+      if (!isAdmin(request)) return send(response, 401, { error: 'Неверный токен администратора' })
+      const inquiries = await readJson('inquiries.json')
+      const index = inquiries.findIndex((item) => item.id === Number(inquiryMatch[1]))
+      if (index < 0) return send(response, 404, { error: 'Заявка не найдена' })
+      const [removed] = inquiries.splice(index, 1)
+      await writeJson('inquiries.json', inquiries)
+      return send(response, 200, { deleted: true, id: removed.id })
+    }
 
     if (request.method === 'GET' && !url.pathname.startsWith('/api/')) {
       if (url.pathname.startsWith('/uploads/')) {

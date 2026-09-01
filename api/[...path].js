@@ -193,6 +193,15 @@ export default async function handler(request, response) {
       item.status = request.body.status; item.updatedAt = new Date().toISOString(); await saveData('inquiries', inquiries)
       return send(response, 200, item)
     }
+    if (request.method === 'DELETE' && inquiry) {
+      if (!requireAdmin(request, response)) return
+      const inquiries = await loadData('inquiries', [])
+      const index = inquiries.findIndex((entry) => entry.id === Number(inquiry[1]))
+      if (index < 0) return send(response, 404, { error: 'Заявка не найдена' })
+      const [removed] = inquiries.splice(index, 1)
+      await saveData('inquiries', inquiries)
+      return send(response, 200, { deleted: true, id: removed.id })
+    }
 
     if (request.method === 'POST' && path === '/api/admin/uploads') {
       if (!requireAdmin(request, response)) return

@@ -1601,6 +1601,28 @@ footer {
     font-size: 10px
 }
 
+.inquiry-actions {
+    align-self: center;
+    display: flex;
+    align-items: stretch;
+    gap: 8px
+}
+
+.inquiry-actions button {
+    padding: 0 13px;
+    border: 1px solid #67383b;
+    border-radius: 4px;
+    background: rgba(148, 55, 61, .12);
+    color: #d8898e;
+    font-size: 9px;
+    cursor: pointer
+}
+
+.inquiry-actions button:disabled {
+    opacity: .55;
+    cursor: wait
+}
+
 .status {
     padding: 4px 7px;
     border-radius: 10px;
@@ -1640,6 +1662,12 @@ footer {
     }
     .inquiry-list select {
         align-self: stretch
+    }
+    .inquiry-actions {
+        align-self: stretch
+    }
+    .inquiry-actions select {
+        flex: 1
     }
 }
 
