@@ -165,7 +165,7 @@ createServer(async (request, response) => {
       if (!input.brand?.trim() || !input.name?.trim() || !Number(input.year) || !Number(input.price)) return send(response, 400, { error: 'Заполните марку, модель, год и цену' })
       const cars = await readJson('cars.json')
       const now = new Date().toISOString()
-      const car = { id: Math.max(0, ...cars.map((item) => item.id)) + 1, brand: input.brand.trim(), name: input.name.trim(), year: Number(input.year), mileage: Number(input.mileage) || 0, fuel: input.fuel || 'Бензин', drive: input.drive || 'Передний привод', price: Number(input.price), tone: input.tone || 'graphite', photos: Array.isArray(input.photos) ? input.photos.filter(Boolean) : [], equipment: Array.isArray(input.equipment) ? input.equipment : [], conditionMarks: Array.isArray(input.conditionMarks) ? input.conditionMarks : [], status: 'available', createdAt: now, updatedAt: now }
+      const car = { id: Math.max(0, ...cars.map((item) => item.id)) + 1, brand: input.brand.trim(), name: input.name.trim(), year: Number(input.year), mileage: Number(input.mileage) || 0, engine: input.engine || (input.fuel === 'Электро' ? 'Электродвигатель' : '2.5 л'), engineDisplacement: Number(input.engineDisplacement) || 0, horsepower: Number(input.horsepower) || 0, fuel: input.fuel || 'Бензин', transmission: input.transmission || 'Автомат', drive: input.drive || 'Передний привод', price: Number(input.price), tone: input.tone || 'graphite', photos: Array.isArray(input.photos) ? input.photos.filter(Boolean) : [], equipment: Array.isArray(input.equipment) ? input.equipment : [], conditionMarks: Array.isArray(input.conditionMarks) ? input.conditionMarks : [], status: 'available', createdAt: now, updatedAt: now }
       cars.push(car)
       await writeJson('cars.json', cars)
       return send(response, 201, car)
@@ -178,13 +178,22 @@ createServer(async (request, response) => {
       const cars = await readJson('cars.json')
       const car = cars.find((item) => item.id === Number(adminCarMatch[1]))
       if (!car) return send(response, 404, { error: 'Автомобиль не найден' })
-      const allowed = ['brand', 'name', 'year', 'mileage', 'fuel', 'drive', 'price', 'tone', 'photos', 'equipment', 'conditionMarks', 'status']
+      const allowed = ['brand', 'name', 'year', 'mileage', 'engine', 'engineDisplacement', 'horsepower', 'fuel', 'transmission', 'drive', 'price', 'tone', 'photos', 'equipment', 'conditionMarks', 'status']
       allowed.forEach((key) => { if (input[key] !== undefined) car[key] = input[key] })
-      car.year = Number(car.year); car.mileage = Number(car.mileage); car.price = Number(car.price)
+      car.year = Number(car.year); car.mileage = Number(car.mileage); car.engineDisplacement = Number(car.engineDisplacement) || 0; car.horsepower = Number(car.horsepower) || 0; car.price = Number(car.price)
       if (!['available', 'sold'].includes(car.status)) return send(response, 400, { error: 'Некорректный статус' })
       car.updatedAt = new Date().toISOString()
       await writeJson('cars.json', cars)
       return send(response, 200, car)
+    }
+    if (request.method === 'DELETE' && adminCarMatch) {
+      if (!isAdmin(request)) return send(response, 401, { error: 'Неверный токен администратора' })
+      const cars = await readJson('cars.json')
+      const index = cars.findIndex((item) => item.id === Number(adminCarMatch[1]))
+      if (index < 0) return send(response, 404, { error: 'Автомобиль не найден' })
+      const [removed] = cars.splice(index, 1)
+      await writeJson('cars.json', cars)
+      return send(response, 200, { deleted: true, id: removed.id })
     }
 
     const inquiryMatch = url.pathname.match(/^\/api\/admin\/inquiries\/(\d+)$/)

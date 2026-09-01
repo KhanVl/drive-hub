@@ -1,5 +1,5 @@
 /* global Buffer, process */
-import { get, list, put } from '@vercel/blob'
+import { del, get, list, put } from '@vercel/blob'
 import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto'
 
 const dataPrefix = 'drivehub/data'
@@ -132,7 +132,7 @@ export default async function handler(request, response) {
       if (!input.brand?.trim() || !input.name?.trim() || !Number(input.year) || !Number(input.price)) return send(response, 400, { error: 'Заполните марку, модель, год и цену' })
       const cars = await loadData('cars', seedCars)
       const now = new Date().toISOString()
-      const car = { id: Math.max(0, ...cars.map((item) => item.id)) + 1, brand: input.brand.trim(), name: input.name.trim(), year: Number(input.year), mileage: Number(input.mileage) || 0, fuel: input.fuel || 'Бензин', drive: input.drive || 'Передний привод', price: Number(input.price), tone: input.tone || 'graphite', photos: Array.isArray(input.photos) ? input.photos.filter(Boolean) : [], equipment: Array.isArray(input.equipment) ? input.equipment : [], conditionMarks: Array.isArray(input.conditionMarks) ? input.conditionMarks : [], status: 'available', createdAt: now, updatedAt: now }
+      const car = { id: Math.max(0, ...cars.map((item) => item.id)) + 1, brand: input.brand.trim(), name: input.name.trim(), year: Number(input.year), mileage: Number(input.mileage) || 0, engine: input.engine || (input.fuel === 'Электро' ? 'Электродвигатель' : '2.5 л'), engineDisplacement: Number(input.engineDisplacement) || 0, horsepower: Number(input.horsepower) || 0, fuel: input.fuel || 'Бензин', transmission: input.transmission || 'Автомат', drive: input.drive || 'Передний привод', price: Number(input.price), tone: input.tone || 'graphite', photos: Array.isArray(input.photos) ? input.photos.filter(Boolean) : [], equipment: Array.isArray(input.equipment) ? input.equipment : [], conditionMarks: Array.isArray(input.conditionMarks) ? input.conditionMarks : [], status: 'available', createdAt: now, updatedAt: now }
       cars.push(car); await saveData('cars', cars)
       return send(response, 201, car)
     }
@@ -143,10 +143,28 @@ export default async function handler(request, response) {
       const car = cars.find((item) => item.id === Number(adminCar[1]))
       if (!car) return send(response, 404, { error: 'Автомобиль не найден' })
       const input = request.body || {}
-      ;['brand', 'name', 'year', 'mileage', 'fuel', 'drive', 'price', 'tone', 'photos', 'equipment', 'conditionMarks', 'status'].forEach((key) => { if (input[key] !== undefined) car[key] = input[key] })
-      car.year = Number(car.year); car.mileage = Number(car.mileage); car.price = Number(car.price); car.updatedAt = new Date().toISOString()
+      ;['brand', 'name', 'year', 'mileage', 'engine', 'engineDisplacement', 'horsepower', 'fuel', 'transmission', 'drive', 'price', 'tone', 'photos', 'equipment', 'conditionMarks', 'status'].forEach((key) => { if (input[key] !== undefined) car[key] = input[key] })
+      car.year = Number(car.year); car.mileage = Number(car.mileage); car.engineDisplacement = Number(car.engineDisplacement) || 0; car.horsepower = Number(car.horsepower) || 0; car.price = Number(car.price); car.updatedAt = new Date().toISOString()
       await saveData('cars', cars)
       return send(response, 200, car)
+    }
+    if (request.method === 'DELETE' && adminCar) {
+      if (!requireAdmin(request, response)) return
+      const cars = await loadData('cars', seedCars)
+      const index = cars.findIndex((item) => item.id === Number(adminCar[1]))
+      if (index < 0) return send(response, 404, { error: 'Автомобиль не найден' })
+      const [removed] = cars.splice(index, 1)
+      await saveData('cars', cars)
+      const blobPaths = (removed.photos || []).map((photo) => {
+        try {
+          const params = new URL(photo, 'https://drivehub-kr.com').searchParams
+          return params.get('blob') || params.get('path')
+        } catch { return null }
+      }).filter((pathname) => pathname?.startsWith('drivehub/cars/'))
+      if (blobPaths.length) {
+        try { await del(blobPaths, { ...blobAuth() }) } catch (error) { console.warn('Blob cleanup failed:', error.message) }
+      }
+      return send(response, 200, { deleted: true, id: removed.id })
     }
 
     if (request.method === 'POST' && path === '/api/inquiries') {

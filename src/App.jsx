@@ -23,6 +23,8 @@ const fallbackCars = [
   { id: 8, brand: 'Kia', name: 'Kia Carnival 2.2D', year: 2020, mileage: 68500, fuel: 'Дизель', drive: 'Передний привод', price: 29800000, tone: 'navy' },
 ]
 
+const preferredBrands = ['BMW', 'Mercedes-Benz', 'Audi', 'Porsche', 'Mini Cooper', 'Kia', 'Hyundai', 'Genesis', 'Chevrolet', 'Renault', 'KGM']
+
 const steps = [
   ['01', 'Подбор авто', 'Находим автомобиль под ваши параметры и бюджет'],
   ['02', 'Проверка', 'Проверяем состояние, историю и документы'],
@@ -53,6 +55,7 @@ function AppIcon({ name }) {
 function App() {
   const [cars, setCars] = useState(fallbackCars)
   const suppressCardClick = useRef(false)
+  const thumbnailsRef = useRef(null)
   const [catalogPage, setCatalogPage] = useState(1)
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('top')
@@ -69,6 +72,10 @@ function App() {
       'Задний привод': 'Rear-wheel drive',
       'Полный привод': 'All-wheel drive',
       'Автомат': 'Automatic',
+      'Механика': 'Manual',
+      'Робот': 'Automated manual',
+      'Вариатор': 'CVT',
+      'Редуктор': 'Single-speed reduction gear',
       'Все марки': 'All makes',
       'Любой год': 'Any year',
       'Любое топливо': 'Any fuel',
@@ -120,6 +127,12 @@ function App() {
     }
     return isEnglish ? (mapping[value] ?? value) : value
   }
+  const getEngineLabel = (car) => {
+    const engine = car.engine || (car.fuel === 'Электро' ? 'Электродвигатель' : '2.5 л')
+    if (!isEnglish) return engine
+    if (engine === 'Электродвигатель') return 'Electric motor'
+    return engine.replace(/\s*л$/u, ' L')
+  }
   const [selectedCar, setSelectedCar] = useState(() => {
     const id = Number(window.location.pathname.match(/^\/cars\/(\d+)$/)?.[1])
     return fallbackCars.find((car) => car.id === id) || null
@@ -132,6 +145,11 @@ function App() {
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [adminOpen, setAdminOpenState] = useState(window.location.pathname === '/admin')
   const [adminToken, setAdminToken] = useState('')
+
+  useEffect(() => {
+    const activeThumbnail = thumbnailsRef.current?.querySelector('.active')
+    activeThumbnail?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+  }, [activePhoto, selectedCar])
   const setAdminOpen = (value) => { setAdminOpenState(value); window.history.pushState({}, '', value ? '/admin' : '/') }
   const [filters, setFilters] = useState({
     search: '',
@@ -236,6 +254,7 @@ function App() {
   const toggleFavorite = (id) => setFavorites((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])
   const formatNumber = (number) => new Intl.NumberFormat('ru-RU').format(number)
   const allMakes = isEnglish ? 'All makes' : 'Все марки'
+  const catalogBrands = [...new Set([...preferredBrands, ...cars.map((car) => car.brand).filter(Boolean)])]
   const anyYear = isEnglish ? 'Any year' : 'Любой год'
   const anyFuel = isEnglish ? 'Any fuel' : 'Любое топливо'
   const anyPrice = isEnglish ? 'Any price' : 'Любая цена'
@@ -293,12 +312,12 @@ function App() {
         <div className="container detail-content">
           <div className="breadcrumbs"><button onClick={() => setSelectedCar(null)}>{localizeLabel('Главная', 'Home')}</button><span>›</span><button onClick={() => setSelectedCar(null)}>{localizeLabel('Авто в наличии', 'Cars in stock')}</button><span>›</span><b>{selectedCar.name}</b></div>
           <section className="detail-hero">
-            <div className="detail-summary"><p className="eyebrow">{localizeLabel('В наличии в Корее', 'Available in Korea')}</p><h1>{selectedCar.name}</h1><div className="quick-specs"><span><b>{selectedCar.year}</b><small>{localizeLabel('Год выпуска', 'Model year')}</small></span><span><b>{formatNumber(selectedCar.mileage)} {isEnglish ? 'km' : 'км'}</b><small>{localizeLabel('Пробег', 'Mileage')}</small></span><span><b>{localizeCarValue(selectedCar.fuel)}</b><small>{localizeLabel('Топливо', 'Fuel')}</small></span><span><b>{localizeCarValue('Автомат')}</b><small>{localizeLabel('Коробка', 'Transmission')}</small></span></div><div className="detail-price">₩ {formatNumber(selectedCar.price)}</div><div className="detail-actions"><a className="button button-gold" href="#detail-request">{localizeLabel('Заказать экспорт', 'Request export')}</a><a className="button button-glass" href="tel:+821012345678">{localizeLabel('Позвонить нам', 'Call us')}</a></div><button className={`favorite-button ${favorites.includes(selectedCar.id) ? 'selected' : ''}`} onClick={() => toggleFavorite(selectedCar.id)}>{favorites.includes(selectedCar.id) ? `♥ ${localizeLabel('В избранном', 'Saved')}` : `♡ ${localizeLabel('Добавить в избранное', 'Add to favourites')}`}</button></div>
-            <div className="gallery"><div className={`main-photo photo-${activePhoto}`} style={{ backgroundImage: `linear-gradient(rgba(5,10,15,.05),rgba(5,10,15,.12)),url(${detailPhotos[activePhoto]})` }}><em>{localizeLabel('В наличии', 'In stock')}</em><button className="gallery-left" onClick={() => setActivePhoto((activePhoto - 1 + detailPhotos.length) % detailPhotos.length)}>‹</button><button className="gallery-right" onClick={() => setActivePhoto((activePhoto + 1) % detailPhotos.length)}>›</button><span>{isEnglish ? 'Photo' : 'Фото'} {activePhoto + 1} / {detailPhotos.length}</span></div><div className="thumbnails">{detailPhotos.map((photo, index) => <button className={activePhoto === index ? 'active' : ''} key={`${photo}-${index}`} onClick={() => setActivePhoto(index)} style={{ backgroundImage: `url(${photo})` }} aria-label={isEnglish ? `Open photo ${index + 1}` : `Открыть фото ${index + 1}`} />)}</div></div>
+            <div className="detail-summary"><p className="eyebrow">{localizeLabel('В наличии в Корее', 'Available in Korea')}</p><h1>{selectedCar.name}</h1><div className="quick-specs"><span><b>{selectedCar.year}</b><small>{localizeLabel('Год выпуска', 'Model year')}</small></span><span><b>{formatNumber(selectedCar.mileage)} {isEnglish ? 'km' : 'км'}</b><small>{localizeLabel('Пробег', 'Mileage')}</small></span><span><b>{localizeCarValue(selectedCar.fuel)}</b><small>{localizeLabel('Топливо', 'Fuel')}</small></span><span><b>{localizeCarValue(selectedCar.transmission || 'Автомат')}</b><small>{localizeLabel('Коробка', 'Transmission')}</small></span></div><div className="detail-price">₩ {formatNumber(selectedCar.price)}</div><div className="detail-actions"><a className="button button-gold" href="#detail-request">{localizeLabel('Заказать экспорт', 'Request export')}</a><a className="button button-glass" href="tel:+821012345678">{localizeLabel('Позвонить нам', 'Call us')}</a></div><button className={`favorite-button ${favorites.includes(selectedCar.id) ? 'selected' : ''}`} onClick={() => toggleFavorite(selectedCar.id)}>{favorites.includes(selectedCar.id) ? `♥ ${localizeLabel('В избранном', 'Saved')}` : `♡ ${localizeLabel('Добавить в избранное', 'Add to favourites')}`}</button></div>
+            <div className="gallery"><div className={`main-photo photo-${activePhoto}`} style={{ backgroundImage: `linear-gradient(rgba(5,10,15,.05),rgba(5,10,15,.12)),url(${detailPhotos[activePhoto]})` }}><em>{localizeLabel('В наличии', 'In stock')}</em><button className="gallery-left" onClick={() => setActivePhoto((activePhoto - 1 + detailPhotos.length) % detailPhotos.length)}>‹</button><button className="gallery-right" onClick={() => setActivePhoto((activePhoto + 1) % detailPhotos.length)}>›</button><span>{isEnglish ? 'Photo' : 'Фото'} {activePhoto + 1} / {detailPhotos.length}</span></div><div className="thumbnails" ref={thumbnailsRef} onWheel={(event) => { if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) event.currentTarget.scrollLeft += event.deltaY }}>{detailPhotos.map((photo, index) => <button className={activePhoto === index ? 'active' : ''} key={`${photo}-${index}`} onClick={() => setActivePhoto(index)} style={{ backgroundImage: `url(${photo})` }} aria-label={isEnglish ? `Open photo ${index + 1}` : `Открыть фото ${index + 1}`} />)}</div></div>
           </section>
 
           <section className="detail-grid">
-            <article className="detail-card specs-card"><h2>{localizeLabel('Характеристики', 'Specifications')}</h2><dl><div><dt>{localizeLabel('Год выпуска', 'Model year')}</dt><dd>{selectedCar.year}</dd></div><div><dt>{localizeLabel('Пробег', 'Mileage')}</dt><dd>{formatNumber(selectedCar.mileage)} {isEnglish ? 'km' : 'км'}</dd></div><div><dt>{localizeLabel('Двигатель', 'Engine')}</dt><dd>{selectedCar.fuel === 'Электро' ? (isEnglish ? 'Electric motor' : 'Электродвигатель') : (isEnglish ? '2.5 L' : '2.5 л')}</dd></div><div><dt>{localizeLabel('Топливо', 'Fuel')}</dt><dd>{localizeCarValue(selectedCar.fuel)}</dd></div><div><dt>{localizeLabel('Коробка передач', 'Transmission')}</dt><dd>{localizeCarValue('Автомат')}</dd></div><div><dt>{localizeLabel('Привод', 'Drivetrain')}</dt><dd>{localizeCarValue(selectedCar.drive)}</dd></div><div><dt>{localizeLabel('Цвет', 'Colour')}</dt><dd>{getCarColor(selectedCar.tone).label}</dd></div><div><dt>{localizeLabel('Страна', 'Country')}</dt><dd>{localizeLabel('Южная Корея', 'South Korea')}</dd></div></dl></article>
+            <article className="detail-card specs-card"><h2>{localizeLabel('Характеристики', 'Specifications')}</h2><dl><div><dt>{localizeLabel('Год выпуска', 'Model year')}</dt><dd>{selectedCar.year}</dd></div><div><dt>{localizeLabel('Пробег', 'Mileage')}</dt><dd>{formatNumber(selectedCar.mileage)} {isEnglish ? 'km' : 'км'}</dd></div><div><dt>{localizeLabel('Двигатель', 'Engine')}</dt><dd>{getEngineLabel(selectedCar)}</dd></div>{Number(selectedCar.engineDisplacement) > 0 && <div><dt>{localizeLabel('Объём двигателя', 'Engine displacement')}</dt><dd>{formatNumber(selectedCar.engineDisplacement)} {isEnglish ? 'cm³' : 'см³'}</dd></div>}{Number(selectedCar.horsepower) > 0 && <div><dt>{localizeLabel('Мощность', 'Power')}</dt><dd>{formatNumber(selectedCar.horsepower)} {isEnglish ? 'hp' : 'л.с.'}</dd></div>}<div><dt>{localizeLabel('Топливо', 'Fuel')}</dt><dd>{localizeCarValue(selectedCar.fuel)}</dd></div><div><dt>{localizeLabel('Коробка передач', 'Transmission')}</dt><dd>{localizeCarValue(selectedCar.transmission || 'Автомат')}</dd></div><div><dt>{localizeLabel('Привод', 'Drivetrain')}</dt><dd>{localizeCarValue(selectedCar.drive)}</dd></div><div><dt>{localizeLabel('Цвет', 'Colour')}</dt><dd>{getCarColor(selectedCar.tone).label}</dd></div><div><dt>{localizeLabel('Страна', 'Country')}</dt><dd>{localizeLabel('Южная Корея', 'South Korea')}</dd></div></dl></article>
             <article className="detail-card description-card"><h2>{localizeLabel('Описание', 'Description')}</h2><p>{selectedCar.name}{isEnglish ? ' is in excellent technical condition. The vehicle has passed an initial inspection and has a clean interior and verified service history.' : ' в отличном техническом состоянии. Автомобиль прошёл первичную проверку, имеет чистый салон и подтверждённую историю обслуживания.'}</p><h3>{localizeLabel('Комплектация', 'Features')} <small>{selectedEquipment.length} {isEnglish ? 'options' : 'опций'}</small></h3>{selectedEquipment.length ? <><div className={`equipment ${equipmentOpen ? 'expanded' : ''}`}>{visibleEquipment.map((option) => <span key={option.id}><b>{option.icon}</b><small>{isEnglish ? option.labelEn : option.labelRu}</small></span>)}</div>{selectedEquipment.length > 6 && <button type="button" className="equipment-toggle" aria-expanded={equipmentOpen} onClick={() => setEquipmentOpen((current) => !current)}>{equipmentOpen ? (isEnglish ? 'Hide features' : 'Скрыть комплектацию') : `${isEnglish ? 'View all' : 'Посмотреть все'} (${selectedEquipment.length})`} <i>{equipmentOpen ? '↑' : '↓'}</i></button>}</> : <p className="equipment-empty">{localizeLabel('Комплектация не указана', 'No features specified')}</p>}</article>
             <article id="detail-request" className="detail-card request-card"><h2>{localizeLabel('Заказать экспорт', 'Request export')}</h2><p>{localizeLabel('Оставьте заявку — рассчитаем доставку в вашу страну.', 'Send an enquiry and we will calculate delivery to your country.')}</p>{requestSent ? <div className="success-message"><b>✓ {localizeLabel('Заявка отправлена', 'Enquiry sent')}</b><span>{localizeLabel('Мы свяжемся с вами в ближайшее время.', 'We will contact you shortly.')}</span></div> : <form onSubmit={submitInquiry}><input name="name" required placeholder={localizeLabel('Ваше имя', 'Your name')} /><input name="phone" required type="tel" placeholder={localizeLabel('Телефон / WhatsApp', 'Phone / WhatsApp')} /><select name="country" required defaultValue=""><option value="" disabled>{localizeLabel('Страна назначения', 'Destination country')}</option><option>{localizeLabel('Россия', 'Russia')}</option><option>{localizeLabel('Казахстан', 'Kazakhstan')}</option><option>{localizeLabel('Германия', 'Germany')}</option><option>{localizeLabel('Другая страна', 'Other country')}</option></select><textarea name="message" placeholder={localizeLabel('Комментарий (необязательно)', 'Message (optional)')} />{requestError && <span className="request-error">{requestError}</span>}<button className="button button-gold" type="submit">{localizeLabel('Отправить заявку', 'Submit enquiry')}</button></form>}</article>
           </section>
@@ -354,7 +373,7 @@ function App() {
             <div className="section-title"><div><p className="eyebrow">{localizeLabel('Каталог', 'Inventory')}</p><h2>{localizeLabel('Автомобили в наличии', 'Cars in stock')}</h2></div><div className="catalog-heading-actions"><button className={favoritesOnly ? 'active' : ''} onClick={() => setFavoritesOnly(!favoritesOnly)}><HeartIcon filled={favoritesOnly} /><span>{localizeLabel('Избранное', 'Favourites')} ({favorites.length})</span></button><span className="results-count">{filteredCars.length} {isEnglish ? 'vehicles' : 'автомобилей'}</span></div></div>
             <div className="catalog-filters">
               <label className="search-field"><span><SearchIcon /></span><input name="search" value={filters.search} onChange={changeFilter} placeholder={isEnglish ? 'Model search' : 'Поиск по модели'} /></label>
-              <select name="brand" value={filters.brand} onChange={changeFilter}><option>{localizeLabel('Все марки', 'All makes')}</option><option>Genesis</option><option>Hyundai</option><option>Kia</option></select>
+              <select name="brand" value={filters.brand} onChange={changeFilter}><option>{localizeLabel('Все марки', 'All makes')}</option>{catalogBrands.map((brand) => <option key={brand}>{brand}</option>)}</select>
               <select name="year" value={filters.year} onChange={changeFilter}><option>{localizeLabel('Любой год', 'Any year')}</option><option value="2023">{isEnglish ? '2023 or newer' : 'От 2023 года'}</option><option value="2022">{isEnglish ? '2022 or newer' : 'От 2022 года'}</option><option value="2021">{isEnglish ? '2021 or newer' : 'От 2021 года'}</option></select>
               <select name="fuel" value={filters.fuel} onChange={changeFilter}><option>{localizeLabel('Любое топливо', 'Any fuel')}</option><option>{localizeCarValue('Бензин')}</option><option>{localizeCarValue('Дизель')}</option><option>{localizeCarValue('Электро')}</option></select>
               <select name="maxPrice" value={filters.maxPrice} onChange={changeFilter}><option>{localizeLabel('Любая цена', 'Any price')}</option><option value="35000000">{isEnglish ? 'Up to ₩35M' : 'До ₩35 млн'}</option><option value="40000000">{isEnglish ? 'Up to ₩40M' : 'До ₩40 млн'}</option><option value="45000000">{isEnglish ? 'Up to ₩45M' : 'До ₩45 млн'}</option></select>
@@ -365,7 +384,7 @@ function App() {
               {visibleCars.map((car) => (
                 <article className="car-card" key={car.id} role="link" tabIndex="0" aria-label={isEnglish ? `Open ${car.name}` : `Открыть ${car.name}`} onClick={() => openCarFromCard(car)} onKeyDown={(event) => { if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('button')) { event.preventDefault(); openCar(car) } }}>
                   <div className={`car-visual ${car.tone}`} style={{ backgroundImage: `url(${car.photos?.[0] || heroImage})`, backgroundSize: 'cover', backgroundPosition: car.photos?.[0] ? 'center' : `${35 + (car.id % 4) * 18}% center` }}><em>{localizeCarValue('В НАЛИЧИИ')}</em><button className={favorites.includes(car.id) ? 'selected' : ''} onClick={(event) => { event.stopPropagation(); toggleFavorite(car.id) }} aria-label={localizeLabel('Добавить в избранное', 'Add to favourites')}><HeartIcon filled={favorites.includes(car.id)} /></button></div>
-                  <div className="car-info"><h3>{car.name}</h3><p>{car.year} {isEnglish ? '' : 'г.'} <i>•</i> {formatNumber(car.mileage)} {isEnglish ? 'km' : 'км'}</p><strong>₩ {formatNumber(car.price)}</strong><div className="tags"><span>{localizeCarValue(car.fuel)}</span><span>{localizeCarValue('Автомат')}</span><span>{localizeCarValue(car.drive)}</span></div><button className="details-button" type="button" onClick={(event) => { event.stopPropagation(); openCar(car) }}>{localizeLabel('Подробнее', 'View details')} <span><ArrowIcon /></span></button></div>
+                  <div className="car-info"><h3>{car.name}</h3><p>{car.year} {isEnglish ? '' : 'г.'} <i>•</i> {formatNumber(car.mileage)} {isEnglish ? 'km' : 'км'}</p><strong>₩ {formatNumber(car.price)}</strong><div className="tags"><span>{localizeCarValue(car.fuel)}</span><span>{localizeCarValue(car.transmission || 'Автомат')}</span><span>{localizeCarValue(car.drive)}</span></div><button className="details-button" type="button" onClick={(event) => { event.stopPropagation(); openCar(car) }}>{localizeLabel('Подробнее', 'View details')} <span><ArrowIcon /></span></button></div>
                 </article>
               ))}
             </div>

@@ -2,6 +2,21 @@ import { useState } from 'react'
 
 const numberFromResult = (value) => Number(String(value || '0').replace(/[^\d,.-]/g, '').replace(',', '.')) || 0
 
+const getInitialForm = (car) => {
+  const age = Math.max(0, new Date().getFullYear() - Number(car.year || 2023))
+  const isElectric = car.fuel === 'Электро'
+  return {
+    owner: '1',
+    age: age < 3 ? '0-3' : age <= 5 ? '3-5' : age <= 7 ? '5-7' : '7-0',
+    engine: isElectric ? '4' : car.fuel === 'Дизель' ? '2' : car.fuel === 'Гибрид' ? '6' : '1',
+    power: Number(car.horsepower) || '',
+    power_unit: '1',
+    value: isElectric ? 1 : Number(car.engineDisplacement) || '',
+    price: Number(car.price) || 33500000,
+    curr: 'KRW',
+  }
+}
+
 function NumberStepper({ name, value, onChange, min, max, step = 1 }) {
   const parseValue = () => Number(String(value ?? '0').replace(',', '.')) || 0
   const updateValue = (nextValue) => {
@@ -33,19 +48,18 @@ function NumberStepper({ name, value, onChange, min, max, step = 1 }) {
 }
 
 export default function CustomsCalculator({ car, isEnglish = false }) {
-  const age = Math.max(0, new Date().getFullYear() - Number(car.year || 2023))
-  const [form, setForm] = useState({
-    owner: '1', age: age < 3 ? '0-3' : age <= 5 ? '3-5' : age <= 7 ? '5-7' : '7-0',
-    engine: car.fuel === 'Электро' ? '4' : car.fuel === 'Дизель' ? '2' : car.fuel === 'Гибрид' ? '6' : '1',
-    power: 184, power_unit: '1', value: car.fuel === 'Электро' ? 1 : 1998,
-    price: car.price || 33500000, curr: 'KRW',
-  })
+  const [form, setForm] = useState(() => getInitialForm(car))
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const change = (event) => setForm((current) => ({ ...current, [event.target.name]: event.target.value }))
   const calculate = async (event) => {
     event.preventDefault(); setLoading(true); setError('')
+    if (Number(form.power) <= 0 || (['1', '2', '6'].includes(form.engine) && Number(form.value) <= 0)) {
+      setLoading(false)
+      setError(isEnglish ? 'Engine power and displacement are missing from this vehicle listing.' : 'В объявлении не указаны мощность и объём двигателя. Обновите характеристики автомобиля.')
+      return
+    }
     try {
       const response = await fetch('/api/customs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
       const data = await response.json()
@@ -55,7 +69,7 @@ export default function CustomsCalculator({ car, isEnglish = false }) {
     finally { setLoading(false) }
   }
   const reset = () => {
-    setForm({ owner: '1', age: '3-5', engine: '1', power: 184, power_unit: '1', value: 1998, price: 33500000, curr: 'KRW' })
+    setForm(getInitialForm(car))
     setResult(null); setError('')
   }
   const chart = result ? [

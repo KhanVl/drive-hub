@@ -932,36 +932,37 @@ footer {
 }
 
 .thumbnails {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    display: flex;
     gap: 8px;
-    margin-top: 9px
+    margin-top: 9px;
+    padding: 0 0 7px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #4a555f #111820
 }
 
 .thumbnails button {
+    flex: 0 0 clamp(105px, 23%, 155px);
     height: 72px;
     border: 2px solid transparent;
     border-radius: 5px;
-    background-size: 300%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     cursor: pointer;
-    opacity: .55
-}
-
-.thumbnails button:nth-child(2) {
-    background-position: 50%
-}
-
-.thumbnails button:nth-child(3) {
-    background-position: 75%
-}
-
-.thumbnails button:nth-child(4) {
-    background-position: 100%
+    opacity: .55;
+    scroll-snap-align: center;
+    transition: opacity .2s, border-color .2s, transform .2s
 }
 
 .thumbnails button.active {
     border-color: var(--gold);
-    opacity: 1
+    opacity: 1;
+    transform: translateY(-1px)
 }
 
 .detail-grid {
@@ -1681,6 +1682,33 @@ footer {
     align-items: start
 }
 
+.admin-car-editor-column {
+    grid-column: 1;
+    grid-row: 1
+}
+
+.admin-cars-layout>.car-editor {
+    grid-column: 1;
+    grid-row: 2
+}
+
+.admin-car-list {
+    grid-column: 2;
+    grid-row: 1 / span 2
+}
+
+.powertrain-editor {
+    position: static;
+    margin: 0
+}
+
+.powertrain-hint {
+    margin: 12px 0 0;
+    color: #89949d;
+    font-size: 9px;
+    line-height: 1.5
+}
+
 .car-editor {
     position: sticky;
     top: 20px;
@@ -1811,12 +1839,31 @@ footer {
     color: #a6afb7
 }
 
+.admin-car-actions .delete-car-button {
+    color: #e36b6b
+}
+
+.admin-car-actions .delete-car-button:hover {
+    color: #ff8a8a
+}
+
+.admin-car-actions button:disabled {
+    opacity: .45;
+    cursor: wait
+}
+
 @media(max-width:900px) {
     .admin-cars-layout {
         grid-template-columns: 1fr
     }
     .car-editor {
         position: static
+    }
+    .admin-car-editor-column,
+    .admin-cars-layout>.car-editor,
+    .admin-car-list {
+        grid-column: 1;
+        grid-row: auto
     }
     .admin-car-list article {
         grid-template-columns: 120px 1fr
@@ -1875,7 +1922,38 @@ footer {
     aspect-ratio: 1.3;
     border-radius: 4px;
     background-size: cover;
-    background-position: center
+    background-position: center;
+    cursor: grab;
+    transition: opacity .15s, transform .15s, box-shadow .15s
+}
+
+.photo-previews>div:active {
+    cursor: grabbing
+}
+
+.photo-previews>div.dragging {
+    opacity: .45;
+    transform: scale(.96);
+    box-shadow: 0 0 0 2px var(--gold)
+}
+
+.photo-order-hint {
+    margin: 10px 0 0;
+    color: #89949d;
+    font-size: 9px;
+    line-height: 1.5
+}
+
+.photo-position {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    padding: 3px 5px;
+    border-radius: 3px;
+    background: rgba(5, 10, 15, .82);
+    color: #fff;
+    font-size: 7px;
+    pointer-events: none
 }
 
 .photo-previews button {
@@ -1890,6 +1968,32 @@ footer {
     background: rgba(5, 10, 15, .8);
     color: white;
     cursor: pointer
+}
+
+.photo-previews .photo-remove {
+    z-index: 2
+}
+
+.photo-previews .photo-order-controls {
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+    display: flex;
+    gap: 3px
+}
+
+.photo-previews .photo-order-controls button {
+    position: static;
+    width: 22px;
+    height: 22px;
+    border: 1px solid rgba(255, 255, 255, .2);
+    font-size: 16px;
+    line-height: 1
+}
+
+.photo-previews .photo-order-controls button:disabled {
+    opacity: .35;
+    cursor: default
 }
 
 .editor-actions button:disabled,
