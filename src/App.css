@@ -1706,6 +1706,7 @@ footer {
 .admin-cars-layout {
     display: grid;
     grid-template-columns: 390px 1fr;
+    grid-template-rows: max-content max-content;
     gap: 20px;
     align-items: start
 }
@@ -1717,14 +1718,14 @@ footer {
 
 .admin-cars-layout>.car-editor {
     grid-column: 1;
-    grid-row: 1;
+    grid-row: 2;
     position: static;
-    margin-top: 178px
+    margin-top: 0
 }
 
 .admin-car-list {
     grid-column: 2;
-    grid-row: 1;
+    grid-row: 1 / span 2;
     max-height: min(72vh, 680px);
     padding-right: 5px;
     overflow-y: auto;
