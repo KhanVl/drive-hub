@@ -47,6 +47,8 @@ const loadData = async (name, fallback) => {
   return new Response(blob.stream).json()
 }
 const saveData = async (name, data) => put(`${dataPrefix}/${name}.json`, JSON.stringify(data), { access: 'private', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json', ...blobAuth() })
+const publicMediaUrl = (url) => typeof url === 'string' ? url.replace('/api/media?path=', '/api/media?blob=') : url
+const withWorkingPhotos = (car) => ({ ...car, photos: Array.isArray(car.photos) ? car.photos.map(publicMediaUrl) : [] })
 
 const sessionSecret = () => process.env.SESSION_SECRET || ''
 const createSession = (username) => {
@@ -88,7 +90,8 @@ export default async function handler(request, response) {
     }
 
     if (request.method === 'GET' && path === '/api/media') {
-      const mediaPath = new URL(request.url, 'https://drivehub-kr.com').searchParams.get('path') || ''
+      const params = new URL(request.url, 'https://drivehub-kr.com').searchParams
+      const mediaPath = params.get('blob') || params.get('path') || ''
       if (!mediaPath.startsWith('drivehub/cars/')) return send(response, 400, { error: 'Некорректный путь' })
       const media = await get(mediaPath, { access: 'private', ...blobAuth() })
       if (!media || media.statusCode !== 200) return send(response, 404, { error: 'Файл не найден' })
@@ -110,18 +113,18 @@ export default async function handler(request, response) {
 
     if (request.method === 'GET' && path === '/api/cars') {
       const cars = await loadData('cars', seedCars)
-      return send(response, 200, cars.filter((car) => car.status === 'available'))
+      return send(response, 200, cars.filter((car) => car.status === 'available').map(withWorkingPhotos))
     }
     const publicCar = path.match(/^\/api\/cars\/(\d+)$/)
     if (request.method === 'GET' && publicCar) {
       const cars = await loadData('cars', seedCars)
       const car = cars.find((item) => item.id === Number(publicCar[1]) && item.status === 'available')
-      return car ? send(response, 200, car) : send(response, 404, { error: 'Автомобиль не найден' })
+      return car ? send(response, 200, withWorkingPhotos(car)) : send(response, 404, { error: 'Автомобиль не найден' })
     }
 
     if (request.method === 'GET' && path === '/api/admin/cars') {
       if (!requireAdmin(request, response)) return
-      return send(response, 200, await loadData('cars', seedCars))
+      return send(response, 200, (await loadData('cars', seedCars)).map(withWorkingPhotos))
     }
     if (request.method === 'POST' && path === '/api/admin/cars') {
       if (!requireAdmin(request, response)) return
@@ -181,7 +184,7 @@ export default async function handler(request, response) {
       if (!buffer.length || buffer.length > 3_000_000) return send(response, 400, { error: 'На Vercel фотография должна быть не больше 3 МБ' })
       const ext = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[match[1]]
       const blob = await put(`drivehub/cars/${Date.now()}-${randomUUID()}.${ext}`, buffer, { access: 'private', contentType: match[1], ...blobAuth() })
-      return send(response, 201, { url: `/api/media?path=${encodeURIComponent(blob.pathname)}` })
+      return send(response, 201, { url: `/api/media?blob=${encodeURIComponent(blob.pathname)}` })
     }
 
     return send(response, 404, { error: 'Маршрут не найден' })
